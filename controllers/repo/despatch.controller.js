@@ -34,7 +34,7 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 			break
 			case 'errors':
 			case 'logs':
-			eDespatchService.get(dbModel,`/${req.params.param1}/${req.params.param2}`,{},(err,data)=>{
+			restServices.eDespatch.get(dbModel,`/${req.params.param1}/${req.params.param2}`,{},(err,data)=>{
 				if(dberr(err,next)){
 					cb(data)
 				}
@@ -43,7 +43,7 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 			case 'view':
 			case 'xslt':
 			case 'xml':
-			eDespatchService.getFile(dbModel,`/${req.params.param1}/${req.params.param2}`,{},(err,data)=>{
+			restServices.eDespatch.getFile(dbModel,`/${req.params.param1}/${req.params.param2}`,{},(err,data)=>{
 				if(dberr(err,next)){
 					cb({file:{fileName:req.params.param2,data:data}})
 				}
@@ -65,13 +65,13 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 			switch(req.params.param1.lcaseeng()){
 				case 'send':
 				if(req.params.param2!=undefined){
-					eDespatchService.post(dbModel,`/send/${req.params.param2}`,req.body,(err,data)=>{
+					restServices.eDespatch.post(dbModel,`/send/${req.params.param2}`,req.body,(err,data)=>{
 						if(dberr(err,next)){
 							cb(data)
 						}
 					})
 				}else{
-					eDespatchService.post(dbModel,`/send`,req.body,(err,data)=>{
+					restServices.eDespatch.post(dbModel,`/send`,req.body,(err,data)=>{
 						if(dberr(err,next)){
 							cb(data)
 						}
@@ -117,7 +117,7 @@ function print(dbModel, member, req, res, next, cb){
 							}
 						})
 				}else{
-					eDespatchService.getFile(dbModel,`/view/${id}`,{},(err,data)=>{
+					restServices.eDespatch.getFile(dbModel,`/view/${id}`,{},(err,data)=>{
 						
 						if(dberr(err,next)){
 							cb({file:{fileName:id,data:data}})

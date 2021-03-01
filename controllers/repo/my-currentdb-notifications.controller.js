@@ -23,7 +23,7 @@ function getList(dbModel, member, req, res, next, cb){
 		options['limit']=req.query.pageSize || req.query.limit
 
 
-	var filter = {memberId:member._id,dbId:dbModel._id,createdDate:(new Date()).addDays(-90)}
+	var filter = {memberId:member._id,dbId:dbModel._id,createdDate:{$gte:(new Date()).addDays(-90)}}
 
 	if((req.query.isRead || '')!='')
 		filter['isRead']=req.query.isRead

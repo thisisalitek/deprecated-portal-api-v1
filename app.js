@@ -1,5 +1,3 @@
-global.fs=require('fs')
-global.path=require('path')
 var createError = require('http-errors')
 var express = require('express')
 var path = require('path')
@@ -8,18 +6,6 @@ var bodyParser = require('body-parser')
 var logger = require('morgan')
 var favicon = require('serve-favicon')
 var methodOverride = require('method-override')
-
-
-global.__root=__dirname
-
-global.util = require('./bin/util')
-global.privateConfig={}
-if(fs.existsSync('./private-config.json')){
-	global.privateConfig=require('./private-config.json')
-}
-
-global.mail=require('./bin/mail')
-
 
 
 var indexRouter = require('./routes/index')
@@ -65,18 +51,16 @@ process.on('uncaughtException', function (err) {
 
 
 
+
 module.exports=(cb)=>{
 	dbLoader((err)=>{
 		if(!err){
 			
-			global.taskHelper=require('./bin/taskhelper')
+			
 			global.services=require('./services/services.js')
 			global.services.start(()=>{})
-			global.eDespatchService = require('./bin/rest-helper')(config.eDespatchService.url)
-			global.eInvoiceService = require('./bin/rest-helper')(config.eInvoiceService.url)
-			global.posDeviceService = require('./bin/rest-helper')(config.posDeviceService.url)
-			global.connectorService = require('./bin/rest-helper')(config.connectorService.url)
-			global.ispiyonService = require('./bin/rest-helper')(config.ispiyonService.url)
+
+			
 			
 			cb(null,app)
 

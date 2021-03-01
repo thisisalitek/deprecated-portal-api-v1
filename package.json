@@ -1,9 +1,8 @@
 {
-  "name": "tr216-api",
+  "name": "api",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "nodemon start-dev.js",
     "start": "node start.js"
   },
   "dependencies": {

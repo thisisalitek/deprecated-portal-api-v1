@@ -1,5 +1,8 @@
 exports.run=(dbModel, programDoc, data, cb)=>{
 	switch(programDoc.type){
+		case 'collection-process':
+		collectionProcess(dbModel,programDoc,data,cb)
+		break
 		case 'file-importer':
 		fileImporter(dbModel,programDoc,data,cb)
 		break
@@ -22,7 +25,71 @@ exports.run=(dbModel, programDoc, data, cb)=>{
 		cb({code:'WRONG_PARAMETER',message:'Yanlis program parametresi'})
 		break
 	}
+}
 
+function collectionProcess(dbModel,programDoc,data,cb){
+	if(programDoc.collections.length==0)
+		return cb({code:'WRONG_PARAMETER',message:'Collection secilmemis'})
+	if(programDoc.collections[0].name=='')
+		return cb({code:'WRONG_PARAMETER',message:'Collection secilmemis'})
+
+	var data2=dataDuzelt(data)
+	var collection=clone(programDoc.collections[0])
+
+	if((collection.filter || '').trim()!=''){
+		if(!(collection.filter.trim().substr(0,1)=='{' && collection.filter.trim().substr(-1,1)=='}')){
+			collection.filter='{' + collection.filter + '}'
+		}
+		try{
+			collection.filter=JSON.parse(collection.filter)
+		}catch(tryErr){	
+			console.error('tryError1:',tryErr)
+		}
+	}
+
+	if((collection.updateExpression || '').trim()!=''){
+		if(!(collection.updateExpression.trim().substr(0,1)=='{' && collection.updateExpression.trim().substr(-1,1)=='}')){
+			collection.updateExpression='{' + collection.updateExpression + '}'
+		}
+		try{
+			collection.updateExpression=JSON.parse(collection.updateExpression)
+		}catch(tryErr){	
+			console.error('tryError2:',tryErr)
+		}
+	}
+
+	if((collection.updateErrorExpression || '').trim()!=''){
+		if(!(collection.updateErrorExpression.trim().substr(0,1)=='{' && collection.updateErrorExpression.trim().substr(-1,1)=='}')){
+			collection.updateErrorExpression='{' + collection.updateErrorExpression + '}'
+		}
+		try{
+			collection.updateErrorExpression=JSON.parse(collection.updateErrorExpression)
+		}catch(tryErr){	
+			console.error('tryError3:',tryErr)
+		}
+	}
+
+
+	getSelectedDataFromCollection(dbModel,collection,data2,(err,docs)=>{
+		if(!err){
+			var tempIndex=0
+			var sonuc=''
+			var hatalar=''
+
+			updateManyDocuments(docs,collection.updateExpression,null,(err2)=>{
+				if(!err2){
+					cb(null,`${docs.length} adet item guncellendi`)
+				}else{
+					updateManyDocuments(docs,collection.updateErrorExpression,err2,(err3)=>{
+						cb(err2)
+					})
+				}
+				
+			})
+		}else{
+			cb(err)
+		}
+	})
 }
 
 function fileExporter(dbModel,programDoc,data,cb){
@@ -72,29 +139,39 @@ function fileExporter(dbModel,programDoc,data,cb){
 			var sonuc=''
 			var hatalar=''
 			// iteration(docs,(item,cb2)=>{
-			// 	tempIndex++
+			// 		tempIndex++
 			util.renderFiles(programDoc.files,docs,(err,renderedCode)=>{
 				if(!err){
-					runRendered(renderedCode,(err,veri)=>{
-						cb(err,veri)
+					runRendered(renderedCode,(err,data)=>{
+						if(err){
+							updateManyDocuments(docs,collection.updateErrorExpression,err,(err2)=>{
+								cb(err,data)
+							})
+						}else{
+							updateManyDocuments(docs,collection.updateExpression,null,(err2)=>{
+								cb(err,data)
+							})
+						}
 					})
 				}else{
-					console.error(err)
-					cb(err)
+					updateManyDocuments(docs,collection.updateErrorExpression,err,(err2)=>{
+						cb(err)
+					})
 				}
 			})
-		// }
-		// ,500,false,(err)=>{
-		// 	cb(err,sonuc)
-		// 	})
-	}else{
-		console.error('err3:',err)
-		cb(err)
-	}
-})
+			// 	}
+			// 	,500,false,(err)=>{
+			// 		cb(err,sonuc)
+			// })
+		}else{
+			console.error('err3:',err)
+			cb(err)
+		}
+	})
 }
 
 function fileImporter(dbModel,programDoc,data,cb){
+	console.log(`fileImporter calisiyor:`,programDoc.name)
 	if(programDoc.collections.length==0)
 		return cb({code:'WRONG_PARAMETER',message:'Collection secilmemis'})
 	if(programDoc.collections[0].name=='')
@@ -150,7 +227,7 @@ function fileImporter(dbModel,programDoc,data,cb){
 							cb(err)
 						}
 
-						ispiyonService.post(dbModel,`/notify`,data)
+						restServices.ispiyon.post(dbModel,`/notify`,data)
 					})
 				}else{
 					cb(err)
@@ -269,11 +346,11 @@ function connectorExporter(dbModel,programDoc,data,cb){
 
 	getSelectedDataFromCollection(dbModel,collection,data2,(err,docs)=>{
 		if(!err){
-			var tempIndex=0
+			// var tempIndex=0
 
 			iteration(docs,(item,cb2)=>{
-				tempLog(`item_${tempIndex}.json`,JSON.stringify(item,null,2))
-				tempIndex++
+				// tempLog(`item_${tempIndex}.json`,JSON.stringify(item,null,2))
+				// tempIndex++
 
 				util.renderFiles(programDoc.files,item,(err,renderedCode)=>{
 					if(!err){
@@ -285,15 +362,13 @@ function connectorExporter(dbModel,programDoc,data,cb){
 							data.content=renderedCode
 						}
 
-						connectorService.post(dbModel,`/send`,data,(err,data)=>{
+						restServices.connector.post(dbModel,`/send`,data,(err,data)=>{
 							if(err && collection.updateErrorExpression){
 								updateOneDocument(item,collection.updateErrorExpression,err,(err2)=>{
-									console.log(`err2:`,err2)
 									cb2(err,data)
 								})
 							}else if(!err && collection.updateExpression){
 								updateOneDocument(item,collection.updateExpression,null,(err2)=>{
-									console.log(`err2:`,err2)
 									cb2(err,data)
 								})
 							}else{
@@ -303,7 +378,7 @@ function connectorExporter(dbModel,programDoc,data,cb){
 					}else{
 						if(collection.updateErrorExpression){
 							updateOneDocument(item,collection.updateErrorExpression,err,(err2)=>{
-								console.log(`err2:`,err2)
+								
 								cb2(err,data)
 							})
 						}else{
@@ -406,6 +481,19 @@ function updateOneDocument(doc,updateExp,err, cb){
 	})
 }
 
+function updateManyDocuments(docs,updateExp,err, cb){
+	iteration(docs,(doc,cb2)=>{
+	Object.keys(updateExp).forEach((k)=>{
+		doc[k]=evalObjectValuesExpression(updateExp[k],doc.toJSON(),err)
+	})
+	doc.save((err,doc2)=>{
+		cb2(err,doc2)
+	})
+	},0,true,(err2)=>{
+		cb(err2)
+	})
+}
+
 function evalObjectValuesExpression(field, doc,err){
 
 	if(typeof field=='string'){
@@ -445,7 +533,7 @@ function connectorImporter(dbModel,programDoc,data,cb){
 					data.content=renderedCode
 				}
 
-				connectorService.post(dbModel,`/send`,data,(err,data)=>{
+				restServices.connector.post(dbModel,`/send`,data,(err,data)=>{
 					if(dberr(err,cb)){
 
 						if(typeof data=='string'){

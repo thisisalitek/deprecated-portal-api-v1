@@ -19,13 +19,13 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 		
 		if(req.params.param1=='send'){
 			if(req.params.param2!=undefined){
-				eDespatchService.post(dbModel,`/send-receipt-advice/${req.params.param2}`,req.body,(err,data)=>{
+				restServices.eDespatch.post(dbModel,`/send-receipt-advice/${req.params.param2}`,req.body,(err,data)=>{
 					if(dberr(err,next)){
 						cb(data)
 					}
 				})
 			}else{
-				eDespatchService.post(dbModel,`/send-receipt-advice`,req.body,(err,data)=>{
+				restServices.eDespatch.post(dbModel,`/send-receipt-advice`,req.body,(err,data)=>{
 					if(dberr(err,next)){
 						cb(data)
 					}

@@ -1584,3 +1584,84 @@ global.objectToListObject=function(obj){
 	})
 	return listObj
 }
+
+
+var crypto = require('crypto'),
+algorithm = 'aes-256-cbc',
+password = 'metinalifeyyaz',
+key = crypto.createHash('md5').update(password, 'utf-8').digest('hex').toUpperCase()
+
+exports.encrypt=function(text){
+	var iv = Buffer.alloc(16)
+	var cipher = crypto.createCipheriv(algorithm, key, iv)
+
+	var crypted = cipher.update(text.toString(),'utf8','hex')
+	crypted += cipher.final('hex')
+	return crypted
+}
+
+exports.decrypt=function(text){
+	var iv = Buffer.alloc(16)
+	var decipher = crypto.createDecipheriv(algorithm, key, iv)
+
+	var dec = decipher.update(text.toString(),'hex','utf8')
+	dec += decipher.final('utf8')
+	return dec
+
+}
+
+exports.encryptbuffer=function(buffer){
+	var iv = Buffer.alloc(16)
+	var cipher = crypto.createCipheriv(algorithm, key, iv)
+
+	var crypted = Buffer.concat([cipher.update(buffer),cipher.final()])
+	return crypted
+}
+
+exports.decryptBuffer=function(buffer){
+	var iv = Buffer.alloc(16)
+	var decipher = crypto.createDecipheriv(algorithm, key, iv)
+	var dec = Buffer.concat([decipher.update(buffer) , decipher.final()])
+	return dec
+}
+
+exports.reqPackage=function(connectinfo, command, params,requestid) {
+	requestid=requestid || uuid.v4()
+	return JSON.stringify({ connectinfo:connectinfo, type : 'REQUEST', requestid:requestid, command: command || '', params:params || ''})
+}
+
+exports.resPackage=function(connectinfo, command, data,requestid) {
+	requestid=requestid || uuid.v4()
+	return JSON.stringify({ connectinfo:connectinfo, type : 'RESPONSE',requestid:requestid, command: command || '', data:data || ''})
+}
+
+
+
+exports.socketwrite=function(socket,data,callback){
+	socket.write(exports.encrypt(data) + '\0',callback)
+}
+
+exports.socketread=function(data){
+	return exports.decrypt(data.toString('utf-8'))
+}
+
+
+
+exports.getParameters=function(callback){
+	var dbHelper = require('./dbhelper_mysql.js')
+	var sql="SELECT * FROM `parameters` WHERE 1=1 " 
+	
+	dbHelper.query(sql, null, function (result) {
+		if(!result.success){
+			callback(null) 
+		}else{
+			var parameters={}
+			result.data.rows.forEach((e)=>{
+				parameters[e.ParamName]=e.ParamValue
+			})
+			
+			callback(parameters)
+		}
+	})
+}
+

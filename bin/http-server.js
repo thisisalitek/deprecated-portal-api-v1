@@ -1,61 +1,75 @@
-//============= HTTP SERVER ==================
-module.exports = (app,callback)=>{
+module.exports =(app)=>{
+	var debug = require('debug')('template:server')
 	var http = require('http')
+
+	var port = normalizePort(app.get('port'))
+
 	var server = http.createServer(app)
 
-	
 
-	server.listen(config.httpserver.port)
-	server.on('error', onError)
-	server.on('listening', onListening)
+/**
+ * Listen on provided port, on all network interfaces.
+ */
 
-	function normalizePort(val) {
-		var port = parseInt(val, 10)
+ server.listen(port)
+ server.on('error', onError)
+ server.on('listening', onListening)
 
-		if (isNaN(port)) {
-			// named pipe
-			return val
-		}
+/**
+ * Normalize a port into a number, string, or false.
+ */
 
-		if (port >= 0) {
-			// port number
-			return port
-		}
+ function normalizePort(val) {
+ 	var port = parseInt(val, 10)
 
-		return false
-	}
+ 	if (isNaN(port)) 
+ 		return val
 
+ 	if (port >= 0) 
+ 		return port
 
-	function onError(error) {
-		if (error.syscall !== 'listen') {
-			throw error
-		}
+ 	return false
+ }
 
-		
+/**
+ * Event listener for HTTP server "error" event.
+ */
 
-		// handle specific listen errors with friendly messages
-		switch (error.code) {
-			case 'EACCES':
-			console.error('port:',config.httpserver.port,' requires elevated privileges')
-			process.exit(1)
-			break
-			case 'EADDRINUSE':
-			console.error('port:',config.httpserver.port,' is already in use')
-			process.exit(1)
-			break
-			default:
-			throw error
-		}
-	}
+ function onError(error) {
+ 	if (error.syscall !== 'listen') 
+ 		throw error
+ 	
 
-	function onListening() {
-		var addr = server.address()
-		var bind = typeof addr === 'string'
-		? 'pipe ' + addr
-		: 'port ' + addr.port
-		console.log('Listening on ' + bind)
-		if(callback)
-			callback(null)
-	}
+ 	var bind = typeof port === 'string'
+ 	? 'Pipe ' + port
+ 	: 'Port ' + port
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+  	case 'EACCES':
+  	console.error(bind + ' requires elevated privileges')
+  	process.exit(1)
+  	break
+  	case 'EADDRINUSE':
+  	console.error(bind + ' is already in use')
+  	process.exit(1)
+  	break
+  	default:
+  	throw error
+  }
 }
-// ==========HTTP SERVER /===========
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+ function onListening() {
+ 	var addr = server.address()
+ 	var bind = typeof addr === 'string'
+ 	? 'pipe ' + addr
+ 	: 'port ' + addr.port
+ }
+
+}
+
+

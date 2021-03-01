@@ -1,7 +1,7 @@
-global.config=require('./config').release
-config.status='release'
+global.__root=__dirname
 
-var log=require('./bin/event-log')
+require('./bin/event-log')
+require('./bin/initialize-app')
 
 require('./app')((err,app)=>{
 	if(!err){
@@ -9,7 +9,7 @@ require('./app')((err,app)=>{
 		eventLog(`application name:\t ${app.get('name').yellow}`)
 		eventLog(`version:\t\t ${app.get('version').yellow}`)
 		eventLog(`http port:\t ${app.get('port').toString().yellow}`)
-		eventLog(`running mod:\t ${config.status.cyan}`)
+		eventLog(`running mode:\t ${config.status.cyan}`)
 	}else{
 		errorLog(err)
 	}

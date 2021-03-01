@@ -201,7 +201,7 @@ function send(dbModel, member, req, res, next, cb){
 	}
 	
 
-	connectorService.post(dbModel,`/send`,data,(err,data)=>{
+	restServices.connector.post(dbModel,`/send`,data,(err,data)=>{
 		if(dberr(err,next)){
 			cb(data)
 		}
@@ -236,7 +236,7 @@ function test(dbModel, member, req, res, next, cb){
 			data['command']='TIME'
 		break
 	}
-	connectorService.post(dbModel,`/test`,data,(err,data)=>{
+	restServices.connector.post(dbModel,`/test`,data,(err,data)=>{
 		if(dberr(err,next)){
 			cb(data)
 		}
