@@ -171,7 +171,6 @@ function fileExporter(dbModel,programDoc,data,cb){
 }
 
 function fileImporter(dbModel,programDoc,data,cb){
-	console.log(`fileImporter calisiyor:`,programDoc.name)
 	if(programDoc.collections.length==0)
 		return cb({code:'WRONG_PARAMETER',message:'Collection secilmemis'})
 	if(programDoc.collections[0].name=='')
@@ -483,12 +482,12 @@ function updateOneDocument(doc,updateExp,err, cb){
 
 function updateManyDocuments(docs,updateExp,err, cb){
 	iteration(docs,(doc,cb2)=>{
-	Object.keys(updateExp).forEach((k)=>{
-		doc[k]=evalObjectValuesExpression(updateExp[k],doc.toJSON(),err)
-	})
-	doc.save((err,doc2)=>{
-		cb2(err,doc2)
-	})
+		Object.keys(updateExp).forEach((k)=>{
+			doc[k]=evalObjectValuesExpression(updateExp[k],doc.toJSON(),err)
+		})
+		doc.save((err,doc2)=>{
+			cb2(err,doc2)
+		})
 	},0,true,(err2)=>{
 		cb(err2)
 	})
@@ -628,65 +627,66 @@ function saveDespatch(dbModel, newDoc,cb){
 			}else{
 				documentHelper.findDefaultEIntegrator(dbModel,(newDoc.eIntegrator || ''),(err,eIntegratorDoc)=>{
 					if(!err){
-						documentHelper.yeniIrsaliyeNumarasi(dbModel,eIntegratorDoc,newDoc,(err,newDoc2)=>{
-							newDoc2.save((err,newDoc3)=>{
-								if(!err){
-									var partyDizi=[]
-									if(newDoc3.ioType==0){
-										if(newDoc3.deliveryCustomerParty){
-											if(newDoc3.deliveryCustomerParty.party){
-												var obj=clone(newDoc3.deliveryCustomerParty.party)
-												obj['partyType']='Customer'
-												partyDizi.push(obj)
-											}
-										}
-										if(newDoc3.buyerCustomerParty){
-											if(newDoc3.buyerCustomerParty.party){
-												var obj=clone(newDoc3.buyerCustomerParty.party)
-												obj['partyType']='Customer'
-												partyDizi.push(obj)
-											}
-										}
-									}else{
-										if(newDoc3.despatchSupplierParty){
-											if(newDoc3.despatchSupplierParty.party){
-												var obj=clone(newDoc3.despatchSupplierParty.party)
-												obj['partyType']='Vendor'
-												partyDizi.push(obj)
-											}
-										}
-										if(newDoc3.sellerSupplierParty){
-											if(newDoc3.sellerSupplierParty.party){
-												var obj=clone(newDoc3.sellerSupplierParty.party)
-												obj['partyType']='Vendor'
-												partyDizi.push(obj)
-											}
-										}
-									}
-									autoNewParties(dbModel,partyDizi,()=>{
-										var dizi=[]
-										newDoc3.despatchLine.forEach((e)=>{
-											if(e.item){
-												if(e.item.name){
-													if(e.item.name.value){
-														dizi.push(clone(e.item))
-													}
+						findPartyIdentification(dbModel,newDoc,(err,newDoc)=>{
+							documentHelper.yeniIrsaliyeNumarasi(dbModel,eIntegratorDoc,newDoc,(err,newDoc2)=>{
+								newDoc2.save((err,newDoc3)=>{
+									if(!err){
+										var partyDizi=[]
+										if(newDoc3.ioType==0){
+											if(newDoc3.deliveryCustomerParty){
+												if(newDoc3.deliveryCustomerParty.party){
+													var obj=clone(newDoc3.deliveryCustomerParty.party)
+													obj['partyType']='Customer'
+													partyDizi.push(obj)
 												}
 											}
-											
-										})
+											if(newDoc3.buyerCustomerParty){
+												if(newDoc3.buyerCustomerParty.party){
+													var obj=clone(newDoc3.buyerCustomerParty.party)
+													obj['partyType']='Customer'
+													partyDizi.push(obj)
+												}
+											}
+										}else{
+											if(newDoc3.despatchSupplierParty){
+												if(newDoc3.despatchSupplierParty.party){
+													var obj=clone(newDoc3.despatchSupplierParty.party)
+													obj['partyType']='Vendor'
+													partyDizi.push(obj)
+												}
+											}
+											if(newDoc3.sellerSupplierParty){
+												if(newDoc3.sellerSupplierParty.party){
+													var obj=clone(newDoc3.sellerSupplierParty.party)
+													obj['partyType']='Vendor'
+													partyDizi.push(obj)
+												}
+											}
+										}
+										autoNewParties(dbModel,partyDizi,()=>{
+											var dizi=[]
+											newDoc3.despatchLine.forEach((e)=>{
+												if(e.item){
+													if(e.item.name){
+														if(e.item.name.value){
+															dizi.push(clone(e.item))
+														}
+													}
+												}
+												
+											})
 
-										
-										autoNewItems(dbModel,dizi,()=>{
-											cb(null,newDoc3._id)
+											
+											autoNewItems(dbModel,dizi,()=>{
+												cb(null,newDoc3._id)
+											})
 										})
-									})
-								}else{
-									cb(err)
-								}
+									}else{
+										cb(err)
+									}
+								})
 							})
 						})
-
 					}else{
 						cb(err)
 					}
@@ -697,9 +697,80 @@ function saveDespatch(dbModel, newDoc,cb){
 	})
 }
 
+function findPartyIdentification(dbModel,doc,callback){
+	try{
+		if(doc.ioType==0){
+			dbModel.parties.findOne({'partyName.name.value':doc.deliveryCustomerParty.party.partyName.name.value},(err,foundDoc)=>{
+				if(!err){
+					if(foundDoc!=null){
+						doc.deliveryCustomerParty.party.partyTaxScheme=clone(foundDoc.partyTaxScheme)
+						doc.deliveryCustomerParty.party.partyIdentification=clone(foundDoc.partyIdentification)
+						doc.deliveryCustomerParty.party.postalAddress.room.value=doc.deliveryCustomerParty.party.postalAddress.room.value || foundDoc.postalAddress.room.value
+						doc.deliveryCustomerParty.party.postalAddress.streetName.value=doc.deliveryCustomerParty.party.postalAddress.streetName.value || foundDoc.postalAddress.streetName.value
+						doc.deliveryCustomerParty.party.postalAddress.blockName.value=doc.deliveryCustomerParty.party.postalAddress.blockName.value || foundDoc.postalAddress.blockName.value
+						doc.deliveryCustomerParty.party.postalAddress.buildingName.value=doc.deliveryCustomerParty.party.postalAddress.buildingName.value || foundDoc.postalAddress.buildingName.value
+						doc.deliveryCustomerParty.party.postalAddress.buildingNumber.value=doc.deliveryCustomerParty.party.postalAddress.buildingNumber.value || foundDoc.postalAddress.buildingNumber.value
+						doc.deliveryCustomerParty.party.postalAddress.citySubdivisionName.value=doc.deliveryCustomerParty.party.postalAddress.citySubdivisionName.value || foundDoc.postalAddress.citySubdivisionName.value
+						doc.deliveryCustomerParty.party.postalAddress.cityName.value=doc.deliveryCustomerParty.party.postalAddress.cityName.value || foundDoc.postalAddress.cityName.value
+						doc.deliveryCustomerParty.party.postalAddress.district.value=doc.deliveryCustomerParty.party.postalAddress.district.value || foundDoc.postalAddress.district.value
+						doc.deliveryCustomerParty.party.postalAddress.country.identificationCode.value=doc.deliveryCustomerParty.party.postalAddress.country.identificationCode.value || foundDoc.postalAddress.country.identificationCode.value
+						doc.deliveryCustomerParty.party.postalAddress.country.name.value=doc.deliveryCustomerParty.party.postalAddress.country.name.value || foundDoc.postalAddress.country.name.value
+						doc.deliveryCustomerParty.party._id=foundDoc._id
+						callback(null,doc)
+					}else{
+						var bFound=false
+						if(doc.deliveryCustomerParty.party.partyIdentification){
+							doc.deliveryCustomerParty.party.partyIdentification.forEach((e)=>{
+								if(e.ID){
+									if(e.ID.attr && e.ID.value!=''){
+										if(e.ID.attr.schemeID=='VKN' || e.ID.attr.schemeID=='TCKN'){
+											bFound=true
+										}
+									}
+								}
+							})
+						}
+
+						if(bFound==false){
+							dbModel.despatches.find({
+								'deliveryCustomerParty.party.partyName.name.value':doc.deliveryCustomerParty.party.partyName.name.value,
+								'deliveryCustomerParty.party.partyIdentification.ID.value':{$ne:''},
+								'deliveryCustomerParty.party.partyIdentification.ID.attr.schemeID':{$in:['VKN','TCKN']}
+							}).sort({_id:-1}).limit(1).exec((err,foundDocs)=>{
+								if(!err){
+									if(foundDocs.length>0){
+										doc.deliveryCustomerParty.party.partyIdentification=clone(foundDocs[0].deliveryCustomerParty.party.partyIdentification)
+										doc.deliveryCustomerParty.party.partyTaxScheme=clone(foundDocs[0].deliveryCustomerParty.party.partyTaxScheme)
+										callback(null,doc)
+									}else{
+										callback(null,doc)
+									}
+								}else{
+									callback(null,doc)
+								}
+							})
+						}else{
+							callback(null,doc)
+						}
+					}
+				}else{
+					callback(null,doc)
+				}
+			})
+
+			
+		}else{
+			callback(null,doc)
+		}
+		
+	}catch(tryErr){
+		errorLog('findPartyIdentity',tryErr)
+		callback(null,doc)
+	}
+}
+
 function autoNewParties(dbModel,dizi,callback){
 	try{
-		tempLog('autoNewParties.json',JSON.stringify(dizi,null,2))
 		var index=0
 		function calistir(cb){
 			if(index>=dizi.length)
