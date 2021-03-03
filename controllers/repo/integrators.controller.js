@@ -8,8 +8,11 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 		}
 		break
 		case 'POST':
-
-		post(dbModel, member, req, res, next, cb)
+		if(req.params.param1=='copy'){
+			copy(dbModel, member, req, res, next, cb)
+		}else{
+			post(dbModel, member, req, res, next, cb)
+		}
 		break
 		case 'PUT':
 
@@ -23,6 +26,42 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 		error.method(req, next)
 		break
 	}
+}
+
+function copy(dbModel, member, req, res, next, cb){
+	var id=req.params.param2 || req.body['id'] || req.query.id || ''
+	var newName=req.body['newName'] || req.body['name'] || ''
+
+	if(id=='')
+		error.param2(req,next)
+
+	dbModel.integrators.findOne({ _id: id},(err,doc)=>{
+		if(dberr(err,next)){
+			if(dbnull(doc,next)){
+				var data=doc.toJSON()
+				data._id=undefined
+				delete data._id
+				if(newName!=''){
+					data.name=newName
+				}else{
+					data.name +=' copy'
+				}
+				data.createdDate=new Date()
+				data.modifiedDate=new Date()
+				saveFiles(dbModel,data,(err,data)=>{
+					var newDoc = new dbModel.integrators(data)
+					if(!epValidateSync(newDoc,next))
+						return
+					newDoc.isDefault=false
+					newDoc.save((err, newDoc2)=>{
+						if(dberr(err,next)){
+							cb(newDoc2)
+						} 
+					})
+				})
+			}
+		}
+	})
 }
 
 function getList(dbModel, member, req, res, next, cb){
@@ -71,7 +110,7 @@ function post(dbModel, member, req, res, next, cb){
 	saveFiles(dbModel,data,(err,data)=>{
 		var newDoc = new dbModel.integrators(data)
 		if(!epValidateSync(newDoc,next))
-		return
+			return
 		newDoc.save((err, newDoc2)=>{
 			if(dberr(err,next)){
 				if(newDoc2.isDefault){
@@ -103,7 +142,7 @@ function put(dbModel, member, req, res, next, cb){
 					var doc2 = Object.assign(doc, data)
 					var newDoc = new dbModel.integrators(doc2)
 					if(!epValidateSync(newDoc,next))
-					return
+						return
 					newDoc.save((err, newDoc2)=>{
 						if(dberr(err,next)){
 							if(newDoc2.isDefault){
