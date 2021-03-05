@@ -1,5 +1,5 @@
 var jwt = require('jsonwebtoken')
-var exceptedFunc=['login','signup','register','verify','forgot-password','status','modules','portal-modules','cities','provinces']
+var exceptedFunc=['login','login-username','signup','register','verify','forgot-password','status','modules','portal-modules','cities','provinces']
 module.exports= function (req, res,cb) {
 	
 	if(exceptedFunc.includes(req.params.func)){
