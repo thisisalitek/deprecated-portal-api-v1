@@ -29,21 +29,17 @@ module.exports= function (member, req, res, next, cb) {
 									role : doc.role,
 									isSysUser:false,
 									isMember:true,
-									isMobile: doc.isMobile,
-									country : doc.country,
-									deviceId : doc.deviceId,
-									deviceToken : doc.deviceToken,
-									authCode : doc.authCode,
 									ip: IP
 								}
-								var token 
+
+								var token
 								var jwt = require('jsonwebtoken')
-								if(doc.ismobile==false){
-									token=jwt.sign(userinfo, 'gizliSir', {expiresIn: 30*1440*60})
-								}else{
+								if(doc.isMobile){
 									token=jwt.sign(userinfo, 'gizliSir', {expiresIn: 5*365*1440*60})
+								}else{
+									token=jwt.sign(userinfo, 'gizliSir', {expiresIn: 30*1440*60})
 								}
-								cb(token)
+								cb({username:doc.username, name:doc.name, lastName:doc.lastName,gender:doc.gender, isSysUser:false,isMember:true, role:doc.role, token:token,databases:[]})
 							}
 						})
 					}else{
@@ -51,7 +47,7 @@ module.exports= function (member, req, res, next, cb) {
 					}
 				}
 			})
-	
+
 	}else{
 		error.method(req,next)
 	}

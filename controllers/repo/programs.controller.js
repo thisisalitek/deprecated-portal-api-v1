@@ -58,7 +58,7 @@ function run(dbModel, member, req, res, next, cb){
 		if(dberr(err,next)){
 			if(dbnull(doc,next)){
 				
-				services.programs.run(dbModel,doc,data,(err,result)=>{
+				programs.run(dbModel,doc,data,(err,result)=>{
 					if(!err){
 						cb(result)
 					}else{
@@ -94,7 +94,7 @@ function runCode(dbModel, member, req, res, next, cb){
 	
 	var data=doc.data || {}
 
-	services.programs.run(dbModel,doc,data,(err,result)=>{
+	programs.run(dbModel,doc,data,(err,result)=>{
 		if(!err){
 			cb(result)
 		}else{

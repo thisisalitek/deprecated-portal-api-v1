@@ -45,14 +45,15 @@ function getList(dbModel, member, req, res, next, cb){
 	]
 		
 
+
 	var filter = {}
 
 	if((req.query.module || '')!='')
 		filter['module']=req.query.module
 
+	// dbModel.settings.find(filter).populate(options.populate).exec((err, resp)=>{
 	dbModel.settings.paginate(filter,options,(err, resp)=>{
 		if(dberr(err,next)){
-			
 			cb(resp)
 		}
 	})

@@ -10,12 +10,13 @@ var methodOverride = require('method-override')
 
 var indexRouter = require('./routes/index')
 var dbLoader = require('./db/db-loader')
+var httpServer=require('./bin/http-server.js')
 
 global.fileImporter = require('./lib/file_importer')
 global.documentHelper = require('./lib/document_helper')
 global.printHelper = require('./lib/print_helper')
-
-var app = express()
+global.programs=require('./services/programs/programs')
+global.app = express()
 var cors = require('cors')
 app.use(cors())
 var flash = require('connect-flash')
@@ -49,25 +50,15 @@ process.on('uncaughtException', function (err) {
 	}
 })
 
-
-
-
-module.exports=(cb)=>{
-	dbLoader((err)=>{
-		if(!err){
-			
-			
-			global.services=require('./services/services.js')
-			global.services.start(()=>{})
-
-			
-			
-			cb(null,app)
-
-		}else{
-			cb(err)
-		}
-
+module.exports=()=>{
+	httpServer(app,(err,server,port)=>{
+		dbLoader((err)=>{
+			if(!err){
+				refreshRepoDb()
+			}else{
+				errorLog(err)
+			}
+		})
 	})
 }
 

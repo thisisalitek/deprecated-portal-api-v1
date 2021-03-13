@@ -48,6 +48,8 @@ function copy(dbModel, member, req, res, next, cb){
 				}
 				data.createdDate=new Date()
 				data.modifiedDate=new Date()
+				data.passive=true
+				
 				saveFiles(dbModel,data,(err,data)=>{
 					var newDoc = new dbModel.integrators(data)
 					if(!epValidateSync(newDoc,next))

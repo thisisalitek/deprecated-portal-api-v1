@@ -6,6 +6,7 @@ module.exports= function (member, req, res, next, cb) {
 		if(username.trim()=='')
 			return next({code:'USERNAME_EMPTY',message:'Kullanıcı bilgisi(email,username,telefon) boş olamaz.'})
 		
+		
 		if(username.length>5 && username.substr(-5)=='@root'){
 			username=username.substr(0,username.length-5)
 			db.sysusers.findOne({username:username,password:password},(err,doc)=>{
@@ -56,13 +57,11 @@ module.exports= function (member, req, res, next, cb) {
 						isSysUser:false,
 						isMember:true,
 						ip: IP
-						//,
-						// modules:(doc.modules || {})
 					}
 
 					var token
 					var jwt = require('jsonwebtoken')
-					if(doc.ismobile){
+					if(doc.isMobile){
 						token=jwt.sign(userinfo, 'gizliSir', {expiresIn: 5*365*1440*60})
 					}else{
 						token=jwt.sign(userinfo, 'gizliSir', {expiresIn: 30*1440*60})

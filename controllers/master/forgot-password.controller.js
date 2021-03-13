@@ -19,11 +19,11 @@ module.exports= (member, req, res, next, cb)=>{
 						throw {code:'USER_NOT_VERIFIED',message:'Kullanici onay kodu girilmemis. Uye olunuz.'}
 
 					if(util.validEmail(formdata.username)){
-						mailsend(formdata.username,doc.password,(data)=>{
+						mailsend(formdata.username,doc.password,next,(data)=>{
 							cb(data)
 						})
 					}else if(util.validTelephone(formdata.username)){
-						smssend(formdata.username,doc.password,(data)=>{
+						smssend(formdata.username,doc.password,next,(data)=>{
 							cb(data)
 						})
 					}else{
@@ -37,23 +37,57 @@ module.exports= (member, req, res, next, cb)=>{
 }
 
 
-function smssend(phonenumber,password,cb){
-	var url = "http://sms.verimor.com.tr/v2/send?username=902167060842&password=atabar18&source_addr=02167060842&msg=PAROLANIZ%20:" + password + "%20%20%20%20%20%20%20%20%20%20&dest=905533521042&datacoding=0&valid_for=2:00"
-	http.get(url, (res)=>{
-		var body = ''
-		res.on('data', (chunk)=>{ body += chunk	})
-		res.on('end', ()=>{	cb(body) })
-	}).on('error', function(e){
-		throw e
+function smssend(phonenumber,password,next,callback){
+	var options = {
+		url: `https://sms.verimor.com.tr/v2/send.json`,
+		method: 'POST',
+		headers: {
+			'Content-Type':'application/json; charset=utf-8'
+		},
+		rejectUnauthorized: false,
+		json:{
+			username:'902167060842',
+			password:'atabar18',
+			messages:[
+			{
+				msg:`PAROLANIZ: ${password}  `,
+				dest:phonenumber
+			}
+			]
+		}
+	}
+
+	request(options, function (error, response, body) {
+		if (!error && response.statusCode==200) {
+			if(typeof body=='string'){
+				try{
+					var resp=JSON.parse(body)
+					callback(resp)
+					
+				}catch(e){
+					if(!e.hasOwnProperty('message')){
+						next({code: 'API_ERROR_DELETE', message: e.message})
+					}else{
+						next({code: 'API_ERROR_DELETE', message: e})
+					}
+
+				}
+			}else{
+				callback(body)
+			}
+
+		}else{
+			next(error?error:body.error,body)
+		}
 	})
 }
 
-function mailsend(email,password,cb){
+function mailsend(email,password,next,callback){
 	var subject="Parola Hatirlatma"
 	var body="Parolaniz : " + password
-	util.sendmail(email,subject,body,(err,data)=>{
+	main.sendMail(email,subject,body,(err,data)=>{
 		if(!err){
-			cb(data)
+			callback(data)
 		}else{
 			throw err
 		}

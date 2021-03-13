@@ -360,7 +360,7 @@ function connectorExporter(dbModel,programDoc,data,cb){
 						}else{
 							data.content=renderedCode
 						}
-
+						tempLog('data.query.txt',data.query)
 						restServices.connector.post(dbModel,`/send`,data,(err,data)=>{
 							if(err && collection.updateErrorExpression){
 								updateOneDocument(item,collection.updateErrorExpression,err,(err2)=>{
