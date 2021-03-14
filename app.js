@@ -7,7 +7,6 @@ var logger = require('morgan')
 var favicon = require('serve-favicon')
 var methodOverride = require('method-override')
 
-
 var indexRouter = require('./routes/index')
 var dbLoader = require('./db/db-loader')
 var httpServer=require('./bin/http-server.js')

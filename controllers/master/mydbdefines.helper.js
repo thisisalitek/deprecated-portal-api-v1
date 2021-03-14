@@ -52,40 +52,40 @@ exports.getOne=function(member,req,res,next,cb){
 	})
 }
 
-function preparePageSettings(databases,callback){
-	iteration(databases,(dbItem,cb)=>{
-		if(!dbItem.settings.page)
-			return cb(null)
-		var sayfalar=Object.keys(dbItem.settings.page)
+// function preparePageSettings(databases,callback){
+// 	iteration(databases,(dbItem,cb)=>{
+// 		if(!dbItem.settings.page)
+// 			return cb(null)
+// 		var sayfalar=Object.keys(dbItem.settings.page)
 
-		iteration(sayfalar,(sayfa,cb2)=>{
-			var programs=clone(dbItem.settings.page[sayfa].programs)
-			dbItem.settings.page[sayfa].programs=[]
+// 		iteration(sayfalar,(sayfa,cb2)=>{
+// 			var programs=clone(dbItem.settings.page[sayfa].programs)
+// 			dbItem.settings.page[sayfa].programs=[]
 			
-			iteration(programs,(prg,cb3)=>{
+// 			iteration(programs,(prg,cb3)=>{
 
-				var prgFilter={passive:false}
-				if(typeof prg=='string'){
-					prgFilter['_id']=prg
-				}else{
-					prgFilter['_id']=prg._id || prg.id || ''
-				}
+// 				var prgFilter={passive:false}
+// 				if(typeof prg=='string'){
+// 					prgFilter['_id']=prg
+// 				}else{
+// 					prgFilter['_id']=prg._id || prg.id || ''
+// 				}
 				
-				repoDb[dbItem._id].programs.findOne(prgFilter).select('_id type name showButtonText icon').exec((err,prgDoc)=>{
-					if(!err){
-						if(prgDoc!=null){
-							dbItem.settings.page[sayfa].programs.push({_id:prgDoc._id.toString(),type:prgDoc.type,name:prgDoc.name,showButtonText:(prgDoc.showButtonText || false),icon:(prgDoc.icon || '')})
-						}
-						cb3(null)
-					}else{
-						cb3(err)
-					}
-				})
-			},0,true,cb2)
+// 				repoDb[dbItem._id].programs.findOne(prgFilter).select('_id type name showButtonText icon').exec((err,prgDoc)=>{
+// 					if(!err){
+// 						if(prgDoc!=null){
+// 							dbItem.settings.page[sayfa].programs.push({_id:prgDoc._id.toString(),type:prgDoc.type,name:prgDoc.name,showButtonText:(prgDoc.showButtonText || false),icon:(prgDoc.icon || '')})
+// 						}
+// 						cb3(null)
+// 					}else{
+// 						cb3(err)
+// 					}
+// 				})
+// 			},0,true,cb2)
 
-		},0,true,cb)
+// 		},0,true,cb)
 
-	},0,true,(err)=>{
-		callback(null,databases)
-	})
-}
+// 	},0,true,(err)=>{
+// 		callback(null,databases)
+// 	})
+// }
