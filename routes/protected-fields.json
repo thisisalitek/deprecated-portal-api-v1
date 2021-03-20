@@ -1,7 +1,7 @@
 {
 	"dbdefine":{
 		"inputFields":["_id","owner","createdDate","modifiedDate","__v","userDb","userDbHost", "deleted","__v"],
-    	"outputFields":["__v", "createdDate","modifiedDate","deleted","userDb","userDbHost","owner"]
+    	"outputFields":["__v", "createdDate","modifiedDate","deleted","userDb","userDbHost"]
 	},
 	"locations":{
 		"inputFields":["_id","createdDate","modifiedDate","__v"],

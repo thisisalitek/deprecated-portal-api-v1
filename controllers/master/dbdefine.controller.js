@@ -25,11 +25,19 @@ module.exports = (member, req, res, next, cb)=>{
 
 function getOne(member,req,res,next,cb){
 
-	var filter = {owner: member._id, deleted:false}
+	var filter = {deleted:false}
 	filter._id=req.params.param1
 	db.dbdefines.findOne(filter, function(err, doc) {
-		if(dberr(err, next))
-			cb(doc)
+		if(dberr(err, next)){
+			if(dbnull(doc,next)){
+				if(doc.owner.toString()!=member._id.toString()){
+					next({code:'AUTH_ERROR',message:'Veri Ambarının sahibi değilsiniz'})
+				}else{
+					cb(doc)		
+				}
+			
+			}
+		}
 	})
 }
 
@@ -39,12 +47,23 @@ function getList(member,req,res,next,cb){
 	if((req.query.pageSize || req.query.limit)){
 		options.limit=req.query.pageSize || req.query.limit
 	}
-	var filter = {owner: member._id, deleted:false}
+	options.populate=[
+		{path:'owner', select:'_id username name lastName'},
+		{path:'authorizedMembers.memberId', select:'_id username name lastName'}
+	]
+	var filter ={ 
+		deleted:false, 
+		$or:[
+			{owner:member._id},
+			{'authorizedMembers.memberId':member._id}
+		]
+	} 
 
 	db.dbdefines.paginate(filter,options,(err, resp)=>{
-		if(dberr(err, next))
+		if(dberr(err, next)){
+			tempLog('dbdefine.json',JSON.stringify(resp,null,2))
 			cb(resp)
-
+		}
 	})
 }
 
@@ -74,18 +93,11 @@ function post(member,req,res,next,cb){
 				var newDoc = new db.dbdefines(data)
 				newDoc.save(function(err, newDoc2) {
 					if (!err) {
-						var userDb=`userdb-${newDoc2._id}`
-						var userDbHost=config.mongodb.userAddress
-						var dbName=newDoc2.dbName
-						newUserDb(newDoc2._id,userDb,userDbHost,dbName,(err)=>{
-							if(!err){
-								newDoc2.userDb = userDb
-								newDoc2.userDbHost = userDbHost
-								newDoc2.save(function(err,newDoc3){
-									result.data=newDoc3
-
-									cb(result)
-								})
+						newDoc2.userDb=`userdb-${newDoc2._id}`
+						newDoc2.userDbHost=config.mongodb.userAddress
+						newDoc2.save((err,newDoc3)=>{
+							if(dberr(err, next)){
+								cb(newDoc3)
 							}
 						})
 					} else {
@@ -95,21 +107,20 @@ function post(member,req,res,next,cb){
 			}
 		
 	})
-
 }
 
 
-function newUserDb(_id,userDb,userDbHost,dbName,cb){
+// function newUserDb(_id,userDb,userDbHost,dbName,cb){
 
-	loadUserDb(_id,userDb,userDbHost,dbName,(err)=>{
-		if(!err){
-			cb(null)
-		}else{
-			next({code:'NEW_USERDB',message:err.message})
-		}
-	})
+// 	loadUserDb(_id,userDb,userDbHost,dbName,(err)=>{
+// 		if(!err){
+// 			cb(null)
+// 		}else{
+// 			next({code:'NEW_USERDB',message:err.message})
+// 		}
+// 	})
 
-}
+// }
 
 
 function put(member,req,res,next,cb){
@@ -118,16 +129,15 @@ function put(member,req,res,next,cb){
 	
 	var data = req.body || {}
 	data._id = req.params.param1
-	if(data.hasOwnProperty('resonanceOptions'))
-		data.resonanceId = data.resonanceOptions.resonanceId.replaceAll(' ','').replaceAll('.','').replaceAll('-','')
 	
 	data.modifiedDate = new Date()
 	db.dbdefines.findOne({ _id: data._id, owner : member._id}, (err, doc)=>{
 		if(dberr(err, next))
 			if(dbnull(doc, next)){
+
 				var doc2 = Object.assign(doc, data)
 				var newDoc = new db.dbdefines(doc2)
-				newDoc.save(function(err, newDoc2) {
+				newDoc.save((err, newDoc2)=>{
 					if(dberr(err, next))
 						cb(newDoc2)
 				})

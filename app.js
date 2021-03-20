@@ -41,19 +41,21 @@ process.on('uncaughtException', function (err) {
 	
 	if(config.status!='development'){
 		mail.sendErrorMail(`Err ${config.status} ${app.get('name')}`,err,(mailErr,info)=>{
-			if(mailErr)
+			if(mailErr){
 				console.log(`mailErr:`,mailErr)
+			}
 			console.log(`mail info:`,info)
 			// process.exit(0)
 		})
 	}
 })
 
+
 module.exports=()=>{
 	httpServer(app,(err,server,port)=>{
 		dbLoader((err)=>{
 			if(!err){
-				refreshRepoDb()
+				
 			}else{
 				errorLog(err)
 			}

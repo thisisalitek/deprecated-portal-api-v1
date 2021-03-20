@@ -32,12 +32,8 @@ module.exports=(app)=>{
 
 function clientControllers(app){
 	app.all('/api/v1/:dbId/*', (req, res, next)=>{
-		if(repoDb[req.params.dbId]==undefined){
-				next()
-			//throw Error(`db:'${req.params.dbId}' bulunamadi`)
-		}else{
-			next()
-		}
+		next()
+		
 	})
 
 	
@@ -61,22 +57,30 @@ function clientControllers(app){
 			if(!ctl){
 				return next()
 			}
-			ctl(repoDb[req.params.dbId],member,req,res,next,(data)=>{
-				if(data==undefined)
-					res.json({success:true})
-				else if(data==null)
-					res.json({success:true})
-				else if(data.file!=undefined)
-					downloadFile(data.file,req,res,next)
-				else if(data.fileId!=undefined)
-					downloadFileId(repoDb[req.params.dbId],data.fileId,req,res,next)
-				else if(data.sendFile!=undefined)
-					sendFile(data.sendFile,req,res,next)
-				else if(data.sendFileId!=undefined)
-					sendFileId(repoDb[req.params.dbId],data.sendFileId,req,res,next)
-				else{
-					data=clearProtectedFields(req.params.func,data)
-					res.status(200).json({ success:true, data: data })
+			repoDbModel(req.params.dbId,(err,dbModel)=>{
+				if(!err){
+					ctl(dbModel,member,req,res,next,(data)=>{
+						if(data==undefined)
+							res.json({success:true})
+						else if(data==null)
+							res.json({success:true})
+						else if(data.file!=undefined)
+							downloadFile(data.file,req,res,next)
+						else if(data.fileId!=undefined)
+							downloadFileId(dbModel,data.fileId,req,res,next)
+						else if(data.sendFile!=undefined)
+							sendFile(data.sendFile,req,res,next)
+						else if(data.sendFileId!=undefined)
+							sendFileId(dbModel,data.sendFileId,req,res,next)
+						else{
+							data=clearProtectedFields(req.params.func,data)
+							res.status(200).json({ success:true, data: data })
+						}
+						dbModel.free()
+						delete dbModel
+					})
+				}else{
+					next(err)
 				}
 			})
 		})

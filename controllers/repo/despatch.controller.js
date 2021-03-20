@@ -359,7 +359,7 @@ function fazlaliklariTemizleDuzelt(data){
 function getDespatchList(ioType, dbModel, member, req, res, next, cb){
 	var options={page: (req.query.page || 1), 
 		populate:[
-		{path:'eIntegrator',select:'_id eIntegrator name username'}
+		{path:'eIntegrator',select:'_id eIntegrator name username' }
 		],
 		
 		select:'_id ioType eIntegrator profileId ID uuid issueDate issueTime despatchAdviceTypeCode lineCountNumeric despatchLine localDocumentId deliveryCustomerParty despatchSupplierParty receiptAdvice despatchStatus despatchErrors localStatus localErrors',
@@ -403,6 +403,12 @@ function getDespatchList(ioType, dbModel, member, req, res, next, cb){
 		}
 	}
 
+	// var b=dbModel.integrators
+	// //dbModel.conn.models['integrators']=dbModel.integrators
+	// var a=dbModel.despatches
+	// Object.keys(dbModel.conn.models).forEach((key)=>{
+	// 	console.log(`despatch controller:`,key)
+	// })
 	dbModel.despatches.paginate(filter,options,(err, resp)=>{
 		if(dberr(err,next)){
 			var liste=[]
