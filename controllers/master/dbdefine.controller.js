@@ -61,8 +61,25 @@ function getList(member,req,res,next,cb){
 
 	db.dbdefines.paginate(filter,options,(err, resp)=>{
 		if(dberr(err, next)){
-			tempLog('dbdefine.json',JSON.stringify(resp,null,2))
-			cb(resp)
+
+			var index=0
+
+			function calistir(cb){
+				if(index>=resp.docs.length)
+					return cb()
+				dbStats(resp.docs[index],(err,statsObj)=>{
+					if(!err){
+						resp.docs[index].stats=statsObj
+					}
+
+					index++
+					setTimeout(calistir,0,cb)
+				})
+			}
+			
+			calistir(()=>{
+				cb(resp)
+			})
 		}
 	})
 }
