@@ -45,12 +45,12 @@ function copy(dbModel, member, req, res, next, cb){
 				else
 					data.name +=' copy'
 
-				yeniHesapKodu(dbModel,doc,(yeniKod)=>{
+				yeniHesapKodu(dbModel,doc,(err,yeniKod)=>{
 					if(dberr(err,next)){
 						data.code=yeniKod
 						var newDoc = new dbModel.accounts(data)
 						if(!epValidateSync(newDoc,next))
-					return
+							return
 						newDoc.save((err, newDoc2)=>{
 							if(dberr(err,next)){
 								var obj=newDoc2.toJSON()
@@ -68,10 +68,10 @@ function copy(dbModel, member, req, res, next, cb){
 
 function yeniHesapKodu(dbModel,sourceDoc,cb){
 	dbModel.accounts.find({parentAccount: (sourceDoc.parentAccount || null), code:{$ne:''}}).sort({code:-1}).limit(1).exec((err,docs)=>{
-		if(dberr(err,next)){
+		if(dberr(err,cb)){
 			if(docs.length==0)
-				return cb('001')
-			cb(util.incString(docs[0].code))
+				return cb(null,'001')
+			cb(null,util.incString(docs[0].code))
 		}
 	})
 }
@@ -96,8 +96,8 @@ function getList(dbModel, member, req, res, next, cb){
 
 	if((req.query.search || '').trim()!=''){
 		filter['$or']=[
-			{name:{ $regex: '.*' + req.query.search + '.*' ,$options: 'i' }},
-			{accountCode:{ $regex: '.*' + req.query.search + '.*' ,$options: 'i' }}
+		{name:{ $regex: '.*' + req.query.search + '.*' ,$options: 'i' }},
+		{accountCode:{ $regex: '.*' + req.query.search + '.*' ,$options: 'i' }}
 		]
 	}
 	

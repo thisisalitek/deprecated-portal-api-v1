@@ -51,7 +51,6 @@ function getList(dbModel, member, req, res, next, cb){
 	if((req.query.module || '')!='')
 		filter['module']=req.query.module
 
-	// dbModel.settings.find(filter).populate(options.populate).exec((err, resp)=>{
 	dbModel.settings.paginate(filter,options,(err, resp)=>{
 		if(dberr(err,next)){
 			cb(resp)
@@ -62,7 +61,6 @@ function getList(dbModel, member, req, res, next, cb){
 function getOne(dbModel, member, req, res, next, cb){
 	dbModel.settings.findOne({_id:req.params.param1},(err,doc)=>{
 		if(dberr(err,next)){
-			console.log(`doc:`,doc)
 			cb(doc)
 		}
 	})

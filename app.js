@@ -40,13 +40,8 @@ process.on('uncaughtException', function (err) {
 	errorLog('Caught exception: ', err)
 	
 	if(config.status!='development'){
-		mail.sendErrorMail(`Err ${config.status} ${app.get('name')}`,err,(mailErr,info)=>{
-			if(mailErr){
-				console.log(`mailErr:`,mailErr)
-			}
-			console.log(`mail info:`,info)
-			// process.exit(0)
-		})
+		mail.sendErrorMail(`${(new Date()).yyyymmddhhmmss()} ${app.get('name')} Error`,errObj)
+		
 	}
 })
 

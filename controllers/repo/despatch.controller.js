@@ -100,6 +100,7 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 	
 }
 
+
 function print(dbModel, member, req, res, next, cb){
 	var id=req.params.param2 || req.body['id'] || req.query.id || ''
 	if(id=='')
@@ -153,7 +154,9 @@ function copy(dbModel, member, req, res, next, cb){
 				newDoc.createdDate=new Date()
 				newDoc.modifiedDate=new Date()
 				newDoc.despatchStatus='Draft'
+				
 				newDoc.despatchErrors=[]
+				newDoc.localStatus=''
 				newDoc.localErrors=[]
 				newDoc.uuid.value=uuid.v4()
 				dbModel.integrators.findOne({_id:newDoc.eIntegrator},(err,eIntegratorDoc)=>{
@@ -369,6 +372,7 @@ function getDespatchList(ioType, dbModel, member, req, res, next, cb){
 	if((req.query.pageSize || req.query.limit))
 		options['limit']=req.query.pageSize || req.query.limit
 
+	// var filter = {}
 	var filter = {ioType:ioType}
 
 	if(req.query.eIntegrator)

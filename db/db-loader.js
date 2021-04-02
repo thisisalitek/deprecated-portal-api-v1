@@ -190,10 +190,7 @@ function baglan(collectionFolder, mongoAddress, dbObj, cb){
 				dbObj.conn.on('disconnected', ()=>{
 					dbObj.conn.active=false
 					eventLog(`${dbObj.nameLog} ${'disconnected'.cyan}`)
-					if(repoDb[dbObj._id]!=undefined){
-						repoDb[dbObj._id]=undefined
-						delete repoDb[dbObj._id]
-					}
+					
 				})
 			}else{
 				if(cb)
