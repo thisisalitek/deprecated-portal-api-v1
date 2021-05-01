@@ -73,26 +73,32 @@ function getList(dbModel, member, req, res, next, cb){
 		populate:[
 		{path:'ledger',select:'_id ledgerYear ledgerPeriod uuid startJournalNumber endJournalNumber startJournalLineNumber endJournalLineNumber'}
 		],
-		sort:{documentDate:1}
-
+		sort:{documentDate:1},
+		select:'-entryLine'
 	}
 	if((req.query.pageSize || req.query.limit))
 		options['limit']=req.query.pageSize || req.query.limit
 
 	var filter = {}
-
+	
 	if((req.query.year || '')!=''){
 		filter['year']=req.query.year
-	}else{
-		filter['year']=(new Date()).getFullYear()
 	}
 
 	if((req.query.period || '')!=''){
 		filter['period']=req.query.period
-	}else{
-		filter['period']=(new Date()).getMonth()+1
 	}
+	
+	if((req.query.date1 || '')!='')
+		filter['documentDate']={$gte:req.query.date1}
 
+	if((req.query.date2 || '')!=''){
+		if(filter['documentDate']){
+			filter['documentDate']['$lte']=req.query.date2
+		}else{
+			filter['documentDate']={$lte:req.query.date2}
+		}
+	}
 
 	// if((req.query.search || '').trim()!='')
 	// 	filter['name']={ '$regex': '.*' + req.query.search + '.*' ,'$options': 'i' }
@@ -111,7 +117,7 @@ function getIdList(dbModel, member, req, res, next, cb){
 
 	filter['_id']={$in:idList}
 
-	dbModel.accounting_entries.find(filter,(err, docs)=>{
+	dbModel.accounting_entries.find(filter).select('-entryLine').exec((err, docs)=>{
 		if(dberr(err,next)){
 			cb(docs)
 		}
@@ -134,13 +140,18 @@ function post(dbModel, member, req, res, next, cb){
 
 	data=veriTemizle(data)
 
+
 	var newDoc = new dbModel.accounting_entries(data)
 	if(!epValidateSync(newDoc,next))
 		return
 
-	newDoc.save((err, newDoc2)=>{
+	verileriKontrolEt(newDoc,(err,newDoc)=>{
 		if(dberr(err,next)){
-			cb(newDoc2)
+			newDoc.save((err, newDoc2)=>{
+				if(dberr(err,next)){
+					cb(newDoc2)
+				}
+			})
 		}
 	})
 }
@@ -154,7 +165,7 @@ function put(dbModel, member, req, res, next, cb){
 	data.modifiedDate = new Date()
 
 	data=veriTemizle(data)
-
+	
 	dbModel.accounting_entries.findOne({ _id: data._id},(err,doc)=>{
 		if(dberr(err,next)){
 			if(dbnull(doc,next)){
@@ -163,17 +174,52 @@ function put(dbModel, member, req, res, next, cb){
 				if(!epValidateSync(newDoc,next))
 					return
 
-				newDoc.save((err, newDoc2)=>{
-					if(dberr(err,next))
-						cb(newDoc2)
+				verileriKontrolEt(newDoc,(err,newDoc)=>{
+					if(dberr(err,next)){
+						newDoc.save((err, newDoc2)=>{
+							if(dberr(err,next))
+								cb(newDoc2)
+						})
+					}
 				})
 			}
+
 		}
 	})
+
+}
+
+function verileriKontrolEt(doc,cb){
+	try{
+		doc.totalDebit=0
+		doc.totalCredit=0
+
+		if(doc.entryLine){
+			doc.entryLine.forEach((e)=>{
+				doc.totalDebit+=(e.debit || 0)
+				doc.totalCredit+=(e.credit || 0)
+				
+				
+			})
+		}
+		
+		if(doc.totalDebit!=doc.totalCredit){
+			cb({code:'SYNTAX_ERROR',message:'Toplam borç ve alacak eşit değil.'})
+		}else{
+			cb(null,doc)
+		}
+
+	}catch(err){
+		errorLog(err)
+		cb(err)
+	}
+
 }
 
 function veriTemizle(data){
-	
+
+	data.lineCountNumeric=(data.entryLine || []).length
+
 	return data
 }
 

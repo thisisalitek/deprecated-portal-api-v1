@@ -114,7 +114,7 @@ module.exports=function(dbModel){
 	schema.plugin(mongooseAggregatePaginate)
 
 	let model=dbModel.conn.model(collectionName, schema)
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 	model.relations={inventory_fiches:'productionOrderId'}
 	return model
 }

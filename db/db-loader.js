@@ -13,11 +13,15 @@ mongoose.set('useCreateIndex', true)
 mongoose.set('useFindAndModify', false)
 
 
-global.sendToTrash=(conn,collectionName,member,filter,cb)=>{
+global.sendToTrash=(dbModel,collectionName,member,filter,cb)=>{
+
+	conn=dbModel.conn
+	let recycle=dbModel['recycle']
+	
 	conn.model(collectionName).findOne(filter,(err,doc)=>{
 		if(!err){
 			function silelim(cb1){
-				conn.model('recycle').insertMany([{collectionName:collectionName,documentId:doc._id,document:doc,deletedBy:member.username}],(err)=>{
+				conn.model('recycle').insertMany([{collectionName:collectionName,documentId:doc._id,document:doc,deletedBy:member.username,deletedById:member._id}],(err)=>{
 					if(!err){
 						conn.model(collectionName).deleteOne(filter,(err,doc)=>{
 							cb1(err,doc)
@@ -142,6 +146,13 @@ global.db={
 		return dbNameLog(this.dbName) 
 	}
 }
+global.dbWeb={
+	dbName:'@dbWeb',
+	get nameLog(){
+		return dbNameLog(this.dbName)
+	}
+}
+
 global.workerDb={
 	dbName:'@workerDb',
 	get nameLog(){
@@ -149,12 +160,21 @@ global.workerDb={
 	}
 }
 
-
 module.exports=(cb)=>{
 	baglan('master.collections',config.mongodb.master,db,(err)=>{
 		if(!err){
 			initRepoDb()
-			baglan('worker.collections',config.mongodb.worker,workerDb,(err)=>cb(err))
+			baglan('web.collections',config.mongodb.web,dbWeb,(err)=>{
+				if(!err){
+					baglan('worker.collections',config.mongodb.worker,workerDb,(err)=>{
+						cb(err)
+					})
+				}else{
+					cb(err)
+				}
+			})
+			
+			
 		}else{
 			cb(err)
 		}

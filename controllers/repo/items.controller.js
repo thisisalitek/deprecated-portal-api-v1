@@ -179,6 +179,12 @@ function getList(dbModel, member, req, res, next, cb){
 	if((req.query.itemClassificationCode || req.query['itemClassificationCode.value'] || '')!='')
 		filter['commodityClassification.itemClassificationCode.value']={ $regex: '.*' + (req.query.itemClassificationCode || req.query['itemClassificationCode.value']) + '.*' ,$options: 'i' }
 
+	if((req.query.unitCode || '')!='')
+		filter['unitCode']=req.query.unitCode
+	if((req.query.unitCode2 || '')!='')
+		filter['unitCode2']=req.query.unitCode2
+	if((req.query.unitCode3 || '')!='')
+		filter['unitCode3']=req.query.unitCode3
 
 	if((req.query.accountGroup || '')!='')
 		filter['accountGroup']=req.query.accountGroup

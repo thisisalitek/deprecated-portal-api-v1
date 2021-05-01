@@ -3,10 +3,10 @@ module.exports=function(dbModel){
 	let schema = mongoose.Schema({
 		ioType :{ type: Number,default: 0, index:true},
 		eIntegrator: {type: mongoose.Schema.Types.ObjectId, ref: 'integrators', mdl:dbModel['integrators'],  required: true,index:true},
-		location: {type: mongoose.Schema.Types.ObjectId, ref: 'locations', mdl:dbModel['locations']},
-		location2: {type: mongoose.Schema.Types.ObjectId, ref: 'locations', mdl:dbModel['locations']},
+		location: {type: mongoose.Schema.Types.ObjectId, ref: 'locations', mdl:dbModel['locations'],index:true},
+		location2: {type: mongoose.Schema.Types.ObjectId, ref: 'locations', mdl:dbModel['locations'],index:true},
 		profileId: { 
-			value: { type: String,default: '', trim:true, enum:['TEMELIRSALIYE'], required: true}
+			value: { type: String,default: '', trim:true, enum:['TEMELIRSALIYE'], required: true,index:true}
 		},
 		ID: dbType.idType,
 		uuid: dbType.valueType,
@@ -43,9 +43,9 @@ module.exports=function(dbModel){
 		despatchLine:[],
 		receiptAdvice: {type: mongoose.Schema.Types.ObjectId, ref: 'despatches_receipt_advice', mdl:dbModel['despatches_receipt_advice']},
 		localDocumentId: {type: String, default: ''},
-		despatchStatus: {type: String, default: 'Draft',enum:['Deleted','Pending','Draft','Canceled','Queued', 'Processing','SentToGib','Approved','PartialApproved','Declined','WaitingForApprovement','Error']},
+		despatchStatus: {type: String, default: 'Draft',enum:['Deleted','Pending','Draft','Canceled','Queued', 'Processing','SentToGib','Approved','PartialApproved','Declined','WaitingForApprovement','Error'],index:true},
 		despatchErrors:[{_date:{ type: Date,default: Date.now}, code:'',message:''}],
-		localStatus: {type: String, default: '',enum:['','transferring','pending','transferred','error']},
+		localStatus: {type: String, default: '',enum:['','transferring','pending','transferred','error'],index:true},
 		localErrors:[{_date:{ type: Date,default: Date.now}, code:'',message:''}],
 		createdDate: { type: Date,default: Date.now},
 		modifiedDate:{ type: Date,default: Date.now}
@@ -55,7 +55,8 @@ module.exports=function(dbModel){
 		if(this.despatchLine){
 			this.lineCountNumeric.value=this.despatchLine.length
 		}
-		updateActions(dbModel,this,next)
+		next()
+		// updateActions(dbModel,this,next)
 	})
 
 	schema.pre('remove', (next)=>next())
@@ -79,7 +80,7 @@ module.exports=function(dbModel){
 	})
 
 	let model=dbModel.conn.model(collectionName, schema)
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 
 	return model
 }
@@ -88,7 +89,8 @@ module.exports=function(dbModel){
 function updateActions(dbModel,doc,next){
 	let index=0
 	function kaydet(cb){
-		if(index>=doc.despatchLine.length) return cb(null)
+		if(index>=doc.despatchLine.length)
+			return cb(null)
 			if(doc.despatchLine[index].item._id){
 				let newActionDoc=new dbModel.actions(dbType.actionType)
 				newActionDoc.actionType='despatch'

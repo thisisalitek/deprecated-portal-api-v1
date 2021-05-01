@@ -1,0 +1,34 @@
+{
+	"_version":"deneme",
+	"nodes":{
+		"jobs" : {"text":"İş ilanları", "icon":"fas fa-user-md", "form":"general"},
+		"realestate" : {"text":"Emlak", "icon":"fas fa-city",
+			"nodes":{
+				"house":{"text":"Ev", "icon":"fas fa-home", "form":"realestate"},
+				"workPlace":{"text":"İş yeri", "icon":"fas fa-store-alt",
+					"nodes":{
+						"forRent":{"text":"kiralık", "icon":"fas fa-building", "form":"realestate"},
+						"forSale":{"text":"satılık", "icon":"fas fa-building", "form":"realestate"},
+						"sublease":{"text":"Devren kiralık", "icon":"fas fa-building", "form":"realestate"},
+						"subleaseForSale":{"text":"Devren satılık", "icon":"fas fa-building", "form":"realestate"}
+					}
+				},
+				"building":{"text":"Bina", "icon":"fas fa-building", "form":"realestate"},
+				"field":{"text":"Arsa", "icon":"fas fa-align-justify", "form":"realestate"}
+			}
+		},
+		"vehicle" : {"text":"Vasıta", "icon":"fas fa-car-side",
+			"nodes":{
+				"car":{"text":"Araba", "icon":"fas fa-car", "form":"vehicle"},
+				"van":{"text":"Van", "icon":"fas fa-shuttle-van", "form":"vehicle"},
+				"suv":{"text":"Suv, Pikap", "icon":"fas fa-truck-pickup", "form":"vehicle"},
+				"motorcycle":{"text":"Motosiklet", "icon":"fas fa-motorcycle", "form":"vehicle"},
+				"marine":{"text":"Deniz", "icon":"fas fa-anchor", "form":"vehicle"},
+				"aircraft":{"text":"Hava", "icon":"fas fa-plane", "form":"vehicle"}
+			}
+		},
+		"services" : {"text":"Hizmetler", "icon":"fas fa-chalkboard-teacher", "form":"general"},
+		"employee" : {"text":"Eleman Bul", "icon":"fas fa-people-carry", "form":"general"},
+		"market" : {"text":"Market", "icon":"fas fa-shopping-cart", "form":"general"}
+	}
+}

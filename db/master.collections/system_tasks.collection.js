@@ -1,5 +1,6 @@
 module.exports=function(conn){
-	var schema = mongoose.Schema({
+	let collectionName=path.basename(__filename,'.collection.js')
+	let schema = mongoose.Schema({
 		userDb: {type: mongoose.Schema.Types.ObjectId, ref: 'dbdefines', default: null},
 		taskType: {type: String, required: true, enum:['connector_transfer_zreport','send_email','send_sms',
 		'connector_import_einvoice','connector_export_einvoice','connector_import_eledger','einvoice_send_to_gib']},
@@ -13,26 +14,13 @@ module.exports=function(conn){
 		error:[]
 	})
 
-	schema.pre('save', function(next) {
-		next()
-	})
-	schema.pre('remove', function(next) {
-		next()
-	})
-
-	schema.pre('remove', true, function(next, done) {
-		next()
-	})
-
-	schema.on('init', function(model) {
-
-	})
-
+	schema.pre('save', (next)=>next())
+	schema.pre('remove', (next)=>next())
+	schema.pre('remove', true, (next, done)=>next())
+	schema.on('init', (model)=>{})
 	schema.plugin(mongoosePaginate)
 
-
-	var collectionName='system_tasks'
-	var model=conn.model(collectionName, schema)
+	let model=conn.model(collectionName, schema)
 
 	model.removeOne=(member, filter,cb)=>{ sendToTrash(conn,collectionName,member,filter,cb) }
 	return model

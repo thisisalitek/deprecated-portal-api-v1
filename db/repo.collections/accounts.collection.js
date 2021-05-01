@@ -43,7 +43,7 @@ module.exports=function(dbModel){
 	schema.on('init', (model)=>{})
 	schema.plugin(mongoosePaginate)
 	let model=dbModel.conn.model(collectionName, schema)
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 	model.relations={accounts:'parentAccount', parties:'account'}
 
 	return model

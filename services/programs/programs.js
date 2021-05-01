@@ -1,4 +1,5 @@
 exports.run=(dbModel, programDoc, data, cb)=>{
+	console.log(`buraya geliyor programDoc.type:`,programDoc.type)
 	switch(programDoc.type){
 		case 'collection-process':
 		collectionProcess(dbModel,programDoc,data,cb)
@@ -180,7 +181,9 @@ function fileImporter(dbModel,programDoc,data,cb){
 
 	util.renderFiles(programDoc.files,data,(err,renderedCode)=>{
 		if(!err){
+
 			runRendered(renderedCode,(err,veri)=>{
+
 				if(!err){
 					var dizi=[]
 					if(!Array.isArray(veri)){
@@ -619,7 +622,7 @@ function insertUpdateCollection(dbModel,data,callback){
 function saveDespatch(dbModel, newDoc,cb){
 	if(newDoc.localDocumentId=='')
 		return cb(null)
-
+	
 	dbModel.despatches.findOne({ioType:newDoc.ioType,localDocumentId:newDoc.localDocumentId},(err,doc)=>{
 		if(dberr(err,cb)){
 			if(doc!=null){
@@ -628,9 +631,12 @@ function saveDespatch(dbModel, newDoc,cb){
 				documentHelper.findDefaultEIntegrator(dbModel,(newDoc.eIntegrator || ''),(err,eIntegratorDoc)=>{
 					if(!err){
 						findPartyIdentification(dbModel,newDoc,(err,newDoc)=>{
+							
 							documentHelper.yeniIrsaliyeNumarasi(dbModel,eIntegratorDoc,newDoc,(err,newDoc2)=>{
+								console.log(`documentHelper.yeniIrsaliyeNumarasi:`,newDoc2.ID.value)
 								newDoc2.save((err,newDoc3)=>{
 									if(!err){
+										console.log(`newDoc3._id:`,newDoc3._id)
 										var partyDizi=[]
 										if(newDoc3.ioType==0){
 											if(newDoc3.deliveryCustomerParty){
@@ -663,8 +669,10 @@ function saveDespatch(dbModel, newDoc,cb){
 												}
 											}
 										}
+										console.log(`burasi autoNewParties oncesi:`)
 										autoNewParties(dbModel,partyDizi,()=>{
 											var dizi=[]
+											console.log(`burasi autoNewParties sonrasi:`)
 											newDoc3.despatchLine.forEach((e)=>{
 												if(e.item){
 													if(e.item.name){
@@ -675,13 +683,14 @@ function saveDespatch(dbModel, newDoc,cb){
 												}
 												
 											})
-
+											console.log(`newDoc3.despatchLine:`,newDoc3.despatchLine.length)
 											
 											autoNewItems(dbModel,dizi,()=>{
 												cb(null,newDoc3._id)
 											})
 										})
 									}else{
+										console.log(`err:`,err)
 										cb(err)
 									}
 								})

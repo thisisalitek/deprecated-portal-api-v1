@@ -19,6 +19,7 @@ module.exports=function(dbModel){
 		documentDate: {type: String, required:[true,'Belge tarihi zorunludur'], index:true },
 		paymentMethod: {type: String, default:'', index:true },
 		journalNumber:{ type: Number,default: 0 , index:true },
+		lineCountNumeric:{ type: Number,default: 0 , index:true },
 		entryLine:[{
 			lineNo:{ type: Number,default: 0 , index:true },
 			accountMain: {type: mongoose.Schema.Types.ObjectId, ref: 'accounts', mdl:dbModel.accounts},
@@ -34,51 +35,7 @@ module.exports=function(dbModel){
 	})
 
 	schema.pre('save', (next)=>{
-		if(!isNaN(this.documentDate.substr(0,4))){
-			if(Number(this.documentDate.substr(0,4))!=this.year){
-				return next({code:'SYNTAX_ERROR',message:'Belge tarihi ile çalışma yılı tutarsız'})
-			}
-		}else{
-			return next({code:'SYNTAX_ERROR',message:'Belge tarihi hatalı'})
-		}
-		if(!isNaN(this.documentDate.substr(5,2))){
-			if(Number(this.documentDate.substr(5,2))!=this.period){
-				return next({code:'SYNTAX_ERROR',message:'Belge tarihi ile çalışma periyodu(ay) tutarsız'})
-			}
-		}else{
-			return next({code:'SYNTAX_ERROR',message:'Belge tarihi hatalı'})
-		}
-		this.startDate=(new Date(this.year,this.period-1,1)).yyyymmdd()
-		this.endDate=(new Date(this.year,this.period-1,1)).lastThisMonth().yyyymmdd()
-		this.totalDebit=0
-		this.totalCredit=0
-		if(this.entryLine){
-			if(Array.isArray(this.entryLine)){
-				var hata=''
-				this.entryLine.forEach((e)=>{
-					if((e.detailComment || '')==''){
-						e.detailComment=this.entryComment
-					}
-					e.postingDate=this.documentDate
-					if(e.debit>0 && e.credit>0){
-						hata+='Hem borç hem alacak sıfırdan büyük olamaz. '
-					}else if(e.debit<0 || e.credit<0){
-						hata+='Borç ve alacak negatif değer olamaz. '
-					}
-					e.debit=Math.round(100*e.debit)/100
-					e.credit=Math.round(100*e.credit)/100
-					this.totalDebit+=e.debit
-					this.totalCredit+=e.credit
-				})
-				if(hata!=''){
-					return next({code:'SYNTAX_ERROR',message:hata})
-				}
-			}
-		}
-
-		if(this.totalDebit!=this.totalCredit){
-			return next({code:'SYNTAX_ERROR',message:'Borc ve alacak toplami eşit değildir'})
-		}
+		next()
 	})
 	schema.pre('remove', (next)=>next())
 	schema.pre('remove', true, (next, done)=>next())
@@ -86,7 +43,7 @@ module.exports=function(dbModel){
 	schema.plugin(mongoosePaginate)
 	schema.plugin(mongooseAggregatePaginate)
 	let model=dbModel.conn.model(collectionName, schema)
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 	model.relations={}
 	return model
 }

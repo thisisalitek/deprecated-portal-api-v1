@@ -24,10 +24,19 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 	function get(){
 		switch(req.params.param1.lcaseeng()){
 			case 'inbox':
-			return getDespatchList(1, dbModel, member, req, res, next, cb)
+			if(req.params.param2!=undefined){
+				return getDespatch(dbModel, member, req, res, next, cb)
+			}else{
+				return getDespatchList(1, dbModel, member, req, res, next, cb)
+			}
+			
 			break
 			case 'outbox':
-			return getDespatchList(0, dbModel, member, req, res, next, cb)
+			if(req.params.param2!=undefined){
+				return getDespatch(dbModel, member, req, res, next, cb)
+			}else{
+				return getDespatchList(0, dbModel, member, req, res, next, cb)
+			}
 			break
 			case 'print':
 			return print(dbModel, member, req, res, next, cb)
@@ -87,6 +96,13 @@ module.exports = (dbModel, member, req, res, next, cb)=>{
 				return importOutbox(dbModel, member, req, res, next, cb)
 				case 'copy':
 				return copy(dbModel, member, req, res, next, cb)
+
+				case 'inbox':
+				req.body.ioType=1
+				return post(dbModel, member, req, res, next, cb)
+				case 'outbox':
+				req.body.ioType=0
+				return post(dbModel, member, req, res, next, cb)
 				default:
 				return error.method(req, next)
 				
@@ -267,7 +283,12 @@ function put(dbModel, member, req, res, next, cb){
 		return error.param1(req, next)
 
 	var data = req.body || {}
-	data._id = req.params.param1
+	if((req.params.param1=='inbox' || req.params.param1=='outbox') && req.params.param2!=undefined){
+		data._id = req.params.param2
+	}else{
+		data._id = req.params.param1
+	}
+	
 	data.modifiedDate = new Date()
 	data=util.amountValueFixed2Digit(data,'')
 	data=fazlaliklariTemizleDuzelt(data)
@@ -355,6 +376,11 @@ function fazlaliklariTemizleDuzelt(data){
 		if(data.issueTime.value.length==5){
 			data.issueTime.value+=':00'
 		}
+	}
+
+	data.lineCountNumeric={value:0}
+	if(data.despatchLine){
+		data.lineCountNumeric.value=data.despatchLine.length
 	}
 	return data
 }
@@ -534,7 +560,14 @@ function listeDuzenle(dbModel,e,cb){
 }
 
 function getDespatch(dbModel, member, req, res, next, cb){
-	var _id= req.params.param1 || req.query._id || ''
+	var _id=''
+	if(req.params.param1=='inbox' && req.params.param2!=undefined){
+	 _id=req.params.param2 || req.query._id || ''
+	}else if(req.params.param1=='outbox' && req.params.param2!=undefined){
+		_id=req.params.param2 || req.query._id || ''
+	}else{
+		_id=req.params.param1 || req.query._id || ''
+	}
 	var includeAdditionalDocumentReference= req.query.includeAdditionalDocumentReference || false
 	var select='-additionalDocumentReference'
 	if(includeAdditionalDocumentReference==true)

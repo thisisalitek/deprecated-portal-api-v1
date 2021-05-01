@@ -40,6 +40,9 @@ module.exports=function(dbModel){
 			pattern:{type: Boolean, default: false},
 			size:{type: Boolean, default: false}
 		},
+		unitCode:{type: String, trim:true, default: 'NIU'},
+		unitCode2:{type: String, trim:true, default: ''},
+		unitCode3:{type: String, trim:true, default: ''},
 		supplyDuration:dbType.numberValueType,
 		tags:{type: String, trim:true, default: ''},
 		images:[{type: mongoose.Schema.Types.ObjectId, ref: 'files', mdl:dbModel['files']}],
@@ -72,7 +75,7 @@ module.exports=function(dbModel){
 
 	let model=dbModel.conn.model(collectionName, schema)
 
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 
 	return model
 }

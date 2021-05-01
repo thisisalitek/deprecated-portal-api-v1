@@ -1,6 +1,7 @@
 var express = require('express')
 var router = express.Router()
 var passport=require('./passport')
+var passportWeb=require('./passport-web')
 var protectedFields=require('./protected-fields.json')
 var appJsModifiedDate=(new Date(fs.statSync(path.join(__dirname,'../app.js')).mtime)).yyyymmddhhmmss() 
 
@@ -33,7 +34,6 @@ module.exports=(app)=>{
 function clientControllers(app){
 	app.all('/api/v1/:dbId/*', (req, res, next)=>{
 		next()
-		
 	})
 
 	
@@ -90,9 +90,8 @@ function clientControllers(app){
 
 	function getRepoController(funcName){
 
-		var controllerName=path.join(__dirname,'../controllers/repo',`${funcName}.controller.js`)
+		let controllerName=path.join(__root,'controllers/repo',`${funcName}.controller.js`)
 		if(fs.existsSync(controllerName)==false){
-			//throw `'${funcName}' controller function was not found`
 			return
 		}else{
 			return require(controllerName)
@@ -102,13 +101,32 @@ function clientControllers(app){
 
 function masterControllers(app){
 	app.all('/api', function(req, res) {
-		res.status(200).json({success: true, data:`Welcome to TR216.master API V1. Last modified:${appJsModifiedDate}. Your path:/api ,Please use: /api/v1[/:dbId]/:func/[:param1]/[:param2]/[:param3] . Methods: GET, POST, PUT, DELETE`})
+		res.status(200).json({success: true, data:`Welcome to GanyGo.master API V1. Last modified:${appJsModifiedDate}. Your path:/api ,Please use: /api/v1[/:dbId]/:func/[:param1]/[:param2]/[:param3] . Methods: GET, POST, PUT, DELETE`})
 	})
 
 	app.all('/api/v1', function(req, res) {
-		res.status(200).json({success: true, data:`Welcome to TR216.master API V1. Last modified:${appJsModifiedDate}. Your path:/api/v1 ,Please use: /api/v1[/:dbId]/:func/[:param1]/[:param2]/[:param3] . Methods: GET, POST, PUT, DELETE`})
+		res.status(200).json({success: true, data:`Welcome to GanyGo.master API V1. Last modified:${appJsModifiedDate}. Your path:/api/v1 ,Please use: /api/v1[/:dbId]/:func/[:param1]/[:param2]/[:param3] . Methods: GET, POST, PUT, DELETE`})
 	})
 	
+	app.all('/api/v1/web', function(req, res,next) {
+		res.status(200).json({success: true, data:`Welcome to GanyGo.web API V1. Last modified:${appJsModifiedDate}. Your path:/api/v1 ,Please use: /api/v1/web[/:dbId]/:func/[:param1]/[:param2]/[:param3] . Methods: GET, POST, PUT, DELETE`})
+	})
+
+	app.all('/api/v1/web/:func', function(req, res,next) {
+		setWebAPIFunctions(req,res,next)
+	})
+	app.all('/api/v1/web/:func/:param1', function(req, res,next) {
+		setWebAPIFunctions(req,res,next)
+	})
+
+	app.all('/api/v1/web/:func/:param1/:param2', function(req, res,next) {
+		setWebAPIFunctions(req,res,next)
+	})
+
+	app.all('/api/v1/web/:func/:param1/:param2/:param3', function(req, res,next) {
+		setWebAPIFunctions(req,res,next)
+	})
+
 	app.all('/api/v1/:func', function(req, res,next) {
 		setAPIFunctions(req,res,next)
 	})
@@ -126,7 +144,7 @@ function masterControllers(app){
 
 	function setAPIFunctions(req, res,next){
 		passport(req,res,(member)=>{
-			var ctl=getController(req.params.func)
+			let ctl=getController(req.params.func)
 			if(!ctl){
 				return next()
 			}
@@ -150,9 +168,41 @@ function masterControllers(app){
 
 	function getController(funcName){
 
-		var controllerName=path.join(__dirname,'../controllers/master',`${funcName}.controller.js`)
+		let controllerName=path.join(__root,'controllers/master',`${funcName}.controller.js`)
 		if(fs.existsSync(controllerName)==false){
-			//throw Error(`'${funcName}' controller function was not found`)
+			return
+		}else{
+			return require(controllerName)
+		}
+	}
+
+	function setWebAPIFunctions(req, res,next){
+		passportWeb(req,res,(member)=>{
+			let ctl=getWebController(req.params.func)
+			if(!ctl){
+				return next()
+			}
+			ctl(member,req,res,next,(data)=>{
+				
+				if(data==undefined)
+					res.json({success:true})
+				else if(data==null)
+					res.json({success:true})
+				else if(data.file!=undefined)
+					downloadFile(data.file,req,res,next)
+				else if(data.fileId!=undefined)
+					downloadFileId(db,data.fileId,req,res,next)
+				else{
+					data=clearProtectedFields(req.params.func,data)
+					res.status(200).json({ success:true, data: data })
+				}
+			})
+		})
+	}
+
+	function getWebController(funcName){
+		let controllerName=path.join(__root,'controllers/web',`${funcName}.controller.js`)
+		if(fs.existsSync(controllerName)==false){
 			return
 		}else{
 			return require(controllerName)
@@ -213,6 +263,9 @@ global.error={
 	},
 	method:function(req, next){
 		next({code:'WRONG_METHOD', message:`function:${req.params.func} WRONG METHOD: ${req.method}`})
+	},
+	auth:function(req, next){
+		next({code:'AUTHENTICATION', message:`Yetki hatası`})
 	},
 	data:function(req, next,field){
 		if(field){

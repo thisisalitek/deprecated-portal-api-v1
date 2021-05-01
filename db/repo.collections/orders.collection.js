@@ -17,7 +17,7 @@ module.exports=function(dbModel){
 							return true
 						}
 					},
-					message: 'Fatura numarasi 16 karakter olmalidir veya bos birakiniz.'
+					message: 'Siparis numarasi 16 karakter olmalidir veya bos birakiniz.'
 				}
 			}
 		},
@@ -147,7 +147,7 @@ schema.index({
 
 
 let model=dbModel.conn.model(collectionName, schema)
-model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 
 return model
 }

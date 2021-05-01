@@ -14,7 +14,7 @@ module.exports=function(conn){
 	schema.pre('remove', true, (next, done)=>next())
 	schema.on('init', (model)=>{})
 	schema.plugin(mongoosePaginate)
-
+	
 	let model=conn.model(collectionName, schema)
 
 	return model

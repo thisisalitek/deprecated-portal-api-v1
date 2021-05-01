@@ -7,7 +7,8 @@ module.exports=function(dbModel){
 		deviceModel: {type: String, default: '', index:true},
 		createdDate: { type: Date,default: Date.now},
 		modifiedDate:{ type: Date,default: Date.now},
-		passive: {type: Boolean, default: false, index:true}
+		passive: {type: Boolean, default: false, index:true},
+		lastError:{_date:{ type: Date,default: Date.now}, code:'',message:''}
 	})
 
 	schema.pre('save', (next)=>next())
@@ -18,7 +19,7 @@ module.exports=function(dbModel){
 	schema.plugin(mongooseAggregatePaginate)
 	
 	let model=dbModel.conn.model(collectionName, schema)
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel.conn,collectionName,member,filter,cb) }
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
 
 	model.relations={pos_device_zreports:'posDevice'}
 

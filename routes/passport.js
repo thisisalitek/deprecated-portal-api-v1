@@ -6,8 +6,8 @@ module.exports= function (req, res,cb) {
 		cb(null)
 	}else{
 		var token = req.body.token || req.query.token || req.headers['x-access-token']  || req.headers['token']
-		if (token) {
-			jwt.verify(token, 'gizliSir', function (err, decoded) {
+		if(token) {
+			jwt.verify(token, privateConfig.secretWord, function (err, decoded) {
 				if (err) 
 					throw { code: 'FAILED_TOKEN', message: 'Yetki hatasi' }
 				else 
