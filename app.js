@@ -11,6 +11,8 @@ var indexRouter = require('./routes/index')
 var dbLoader = require('./db/db-loader')
 var httpServer=require('./bin/http-server.js')
 
+global.staticValues=require('./resources/static-values.json')
+
 global.fileImporter = require('./lib/file_importer')
 global.documentHelper = require('./lib/document_helper')
 global.printHelper = require('./lib/print_helper')
@@ -93,50 +95,3 @@ function testControllers(log){
 	})
 }
 
-
-loadCategoryList()
-
-function loadCategoryList(){
-	global.webCategoryList = require(path.join(__root,'resources','web-category-list.json'))
-	global.webCategoryList2={}
-	global.webCategoryFormTypes = require(path.join(__root,'resources','web-category-form-types.json'))
-	modifyWebCategoryList(webCategoryList)
-	
-	tempLog('webCategoryList.json',JSON.stringify(webCategoryList,null,2))
-	tempLog('webCategoryList2.json',JSON.stringify(webCategoryList2,null,2))
-}
-
-function modifyWebCategoryList(obj,currentKey='',parentKey=''){
-	obj.pathKey=(parentKey!=''?parentKey+'.':'') + currentKey
-	if(obj.pathKey!=''){
-		webCategoryList2[obj.pathKey]={
-			pathKey:obj.pathKey,
-			path:'/' + (obj.pathKey.replaceAll('.','/')),
-			text:obj.text || '',
-			fields:{}
-		}
-		let formObj={}
-		if(typeof obj.form=='string'){
-			if(webCategoryFormTypes[obj.form]==undefined){
-				formObj={}
-			}else{
-				formObj=Object.assign({},webCategoryFormTypes[obj.form])
-			}
-			
-		}else{
-			formObj=Object.assign({},obj.form)
-		}
-		webCategoryList2[obj.pathKey].fields=getFormFieldList(formObj)
-	}
-	if(obj.nodes!=undefined){
-		Object.keys(obj.nodes).forEach((key)=>{
-			modifyWebCategoryList(obj.nodes[key],key,obj.pathKey)
-		})
-	}
-}
-
-function getFormFieldList(formObj){
-	let fields=objectToListObject(formObj)
-
-	return fields
-}

@@ -1,4 +1,4 @@
-module.exports=function(conn){
+module.exports=function(dbModel){
 	let collectionName=path.basename(__filename,'.collection.js')
 	let schema = mongoose.Schema({
 		uploadById: {type: mongoose.Schema.Types.ObjectId, default:null, index:true},
@@ -30,9 +30,10 @@ module.exports=function(conn){
 	schema.pre('remove', true, (next, done)=>next())
 	schema.on('init', (model)=>{})
 	schema.plugin(mongoosePaginate)
-	
-	let model=conn.model(collectionName, schema)
 
-	model.removeOne=(member, filter,cb)=>{ sendToTrash(conn,collectionName,member,filter,cb) }
+	let model=dbModel.conn.model(collectionName, schema)
+
+	model.removeOne=(member, filter,cb)=>{ sendToTrash(dbModel,collectionName,member,filter,cb) }
+
 	return model
 }

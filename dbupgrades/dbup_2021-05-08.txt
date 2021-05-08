@@ -1,0 +1,30 @@
+
+
+db.getCollection('members').find({}).forEach((e)=>{
+e.address=undefined
+delete e.address
+
+e.address2=undefined
+delete e.address2
+
+e.mainPictureSmall=undefined
+delete e.mainPictureSmall
+
+e.mainPictureBlur=undefined
+delete e.mainPictureBlur
+
+e.mainPictureSmallBlur=undefined
+delete e.mainPictureSmallBlur
+
+e.address01=undefined
+delete e.address01
+
+
+
+
+
+db.getCollection('members').deleteOne({_id:e._id})
+db.getCollection('members').insertOne(e)
+
+
+})

@@ -1,7 +1,11 @@
 const mongoose=require('mongoose');
 
 const valueType={value:{ type: String, trim:true, default: ''}}
+const valueIndexedType={value:{ type: String, trim:true, default: '',index:true}}
+
 const idType={value:{ type: String, trim:true, default: ''}, attr:{schemeID:{ type: String, trim:true, default: ''}}}
+const idIndexedType={value:{ type: String, trim:true, default: '',index:true}, attr:{schemeID:{ type: String, trim:true, default: ''}}}
+
 const numberValueType={value:{ type: Number, default: 0}}
 const booleanValueType={value:{ type: Boolean,default: false}}
 const amountType={ value:{type:Number, default:0}, attr:{ currencyID:{ type: String, trim:true, default: ''}}}
@@ -716,9 +720,13 @@ const receiptAdviceLineInfoType={
 	oversupplyQuantity:quantityType
 }
 
+
+
 module.exports = Object.freeze({
 	valueType:valueType,
+	valueIndexedType:valueIndexedType,
 	idType:idType,
+	idIndexedType:idIndexedType,
 	numberValueType:numberValueType,
 	amountType:amountType,
 	quantityType:quantityType,

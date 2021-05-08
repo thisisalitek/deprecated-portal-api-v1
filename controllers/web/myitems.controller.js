@@ -1,5 +1,5 @@
 module.exports = (member, req, res, next, cb)=>{
-	if(!member && (req.method=='POST' || req.method=='PUT' || req.method=='DELETE')){
+	if(!member){
 		return error.auth(req,next)
 	}
 	switch(req.method){
@@ -70,8 +70,10 @@ function copy(member, req, res, next, cb){
 }
 
 function getList(member, req, res, next, cb){
-	let options={page: (req.query.page || 1), limit:10
-		
+	let options={page: (req.query.page || 1), limit:10,
+		populate:[
+		{path:'image',select:'_id large'}
+		]
 	}
 	
 	if((req.query.pageSize || req.query.limit))
@@ -79,9 +81,28 @@ function getList(member, req, res, next, cb){
 	if(options.limit>50){
 		options.limit=50
 	}
-	let filter = {}
+	let filter = {memberId:member._id}
 	options.sort={}
 
+	if((req.query.imageSize || '')!=''){
+		switch(req.query.imageSize){
+			case 'small':
+			case 'sm':
+			options.populate[0].select='_id small'
+			break
+			case 'medium':
+			case 'md':
+			options.populate[0].select='_id medium'
+			break
+			case 'large':
+			case 'lg':
+			options.populate[0].select='_id large'
+			break
+			case 'original':
+			options.populate[0].select='_id data'
+			break
+		}
+	}
 
 	if((req.query.passive || '')!='*'){
 		if((req.query.passive || '')!=''){
@@ -116,12 +137,15 @@ function getList(member, req, res, next, cb){
 
 function getIdList(member, req, res, next, cb){
 	
-	let filter = {}
+	let filter = {memberId:member._id}
+	let populate=[
+	{path:'images', select:'_id data'}
+	]
 	let idList=req.params.param1.replaceAll(';',',').split(',')
 
 	filter['_id']={$in:idList}
 
-	dbWeb.items.find(filter,(err, docs)=>{
+	dbWeb.items.find(filter).populate(populate).exec((err, docs)=>{
 		if(dberr(err,next)){
 			cb(docs)
 		}
@@ -130,7 +154,12 @@ function getIdList(member, req, res, next, cb){
 
 
 function getOne(member, req, res, next, cb){
-	dbWeb.items.findOne({_id:req.params.param1}).exec((err,doc)=>{
+
+	let filter = {memberId:member._id,_id:req.params.param1}
+	let populate=[
+	{path:'images', select:'_id data'}
+	]
+	dbWeb.items.findOne(filter).populate(populate).exec((err,doc)=>{
 		if(dberr(err,next)){
 			if(dbnull(doc,next)){
 				cb(doc)
@@ -184,6 +213,10 @@ function saveImages (member,data,cb){
 						doc.blur=resimler[index].blur!=undefined?resimler[index].blur:doc.blur
 						doc.adult=resimler[index].adult!=undefined?resimler[index].adult:doc.adult
 						doc.passive=resimler[index].passive!=undefined?resimler[index].passive:doc.passive
+						doc.rotate=resimler[index].rotate!=undefined?resimler[index].rotate:doc.rotate
+						doc.zoom=resimler[index].zoom!=undefined?resimler[index].zoom:doc.zoom
+						doc.marginTop=resimler[index].marginTop!=undefined?resimler[index].marginTop:doc.marginTop
+						doc.marginLeft=resimler[index].marginLeft!=undefined?resimler[index].marginLeft:doc.marginLeft
 						doc.save((err)=>{
 							if(!err){
 								imageList.push(doc._id)
@@ -198,7 +231,7 @@ function saveImages (member,data,cb){
 			})
 		}else{
 			let imgData={
-				memberId:member?member._id:null,
+				uploadById:member?member._id:null,
 				caption:resimler[index].caption || '',
 				tags:resimler[index].tags || '',
 				fileName:resimler[index].fileName || '',
@@ -210,7 +243,11 @@ function saveImages (member,data,cb){
 				large:resimler[index].large || '',
 				blur:resimler[index].blur || false,
 				adult:resimler[index].adult || false,
-				passive:resimler[index].passive || false
+				passive:resimler[index].passive || false,
+				rotate:resimler[index].rotate || 0,
+				zoom:resimler[index].zoom || 0,
+				marginTop:resimler[index].marginTop || 0,
+				marginLeft:resimler[index].marginLeft || 0
 			}
 			let newDoc=new dbWeb.images(imgData)
 			newDoc.save((err,newDoc2)=>{
@@ -257,12 +294,10 @@ function put(member, req, res, next, cb){
 		if(dberr(err,next)){
 			if(dbnull(doc,next)){
 				saveImages(member,data,(err,data)=>{
-					let doc2 = Object.assign(doc, data)
-					let newDoc = new dbWeb.items(doc2)
-					if(!epValidateSync(newDoc,next))
-						return
 
-					newDoc.save((err, newDoc2)=>{
+					let doc2 = Object.assign(doc, data)
+					console.log(`doc2._id:`,doc2._id)
+					dbWeb.items.save(member,doc2,(err,newDoc2)=>{
 						if(dberr(err,next)){
 							cb(newDoc2)
 						} 

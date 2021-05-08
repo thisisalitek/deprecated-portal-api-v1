@@ -17,8 +17,7 @@ module.exports=(app)=>{
 	
 	masterControllers(app)
 	clientControllers(app)
-	
-	
+		
 
 	// catch 404 and forward to error handler
 	app.use((req, res, next)=>{
@@ -29,7 +28,6 @@ module.exports=(app)=>{
 		sendError(err,res)
 	})
 }
-
 
 function clientControllers(app){
 	app.all('/api/v1/:dbId/*', (req, res, next)=>{

@@ -123,7 +123,7 @@ global.epValidateSync=(doc,cb)=>{
 		var keys=Object.keys(err.errors)
 		var returnError={code:'HATALI_VERI',message:''}
 		keys.forEach((e,index)=>{
-			returnError.message +=`Hata ${(index+1).toString()} : ${err.errors[e].message}`
+			returnError.message +=`#${(index+1).toString()} : ${err.errors[e].message}`
 			if(index<keys.length-1)
 				returnError.message +='  |  '
 		})
@@ -161,6 +161,7 @@ global.workerDb={
 }
 
 module.exports=(cb)=>{
+
 	baglan('master.collections',config.mongodb.master,db,(err)=>{
 		if(!err){
 			initRepoDb()
@@ -411,5 +412,13 @@ global.dbStats=function(doc,cb){
 		}else{
 			cb(err)
 		}
+	})
+}
+
+global.freeModels=function(conn){
+	Object.keys(conn.models).forEach((key)=>{
+		delete conn.models[key]
+		delete conn.collections[key]
+		delete conn.base.modelSchemas[key]
 	})
 }
