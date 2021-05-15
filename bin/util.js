@@ -1708,3 +1708,14 @@ global.timeReset=()=>{
 }
 
 
+global.changeImageObject=(source)=>{
+	let target={}
+	Object.keys(source || {}).forEach((key)=>{
+		let key2=key
+		if(['small','medium','large'].includes(key)){
+			key2='data'
+		}
+		target[key2]=source[key]
+	})
+	return target
+}

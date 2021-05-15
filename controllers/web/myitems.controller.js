@@ -176,11 +176,13 @@ function post(member, req, res, next, cb){
 	data=dataDuzenle(data,req)
 
 	saveImages(member,data,(err,data)=>{
-		dbWeb.items.save(member,data,(err,newDoc2)=>{
-			if(dberr(err,next)){
-				cb(newDoc2)
-			} 
-		})
+		if(dberr(err,next)){
+			dbWeb.items.save(member,data,(err,newDoc2)=>{
+				if(dberr(err,next)){
+					cb(newDoc2)
+				} 
+			})
+		}
 	})
 }
 
@@ -205,7 +207,7 @@ function saveImages (member,data,cb){
 			return cb1()
 
 		if(resimler[index]._id){
-			dbWeb.images.findOne({_id:resimler[index]._id, memberId:member._id},(err,doc)=>{
+			dbWeb.images.findOne({_id:resimler[index]._id, uploadById:member._id},(err,doc)=>{
 				if(dberr(err,cb1)){
 					if(dbnull(doc,cb1)){
 						doc.caption=resimler[index].caption || doc.caption || ''

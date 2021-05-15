@@ -16,12 +16,20 @@ module.exports = (member, req, res, next, cb)=>{
 
 
 function getMyProfile(member,req,res,next,cb){
-	let populate=[
-	{path:'images', select:'_id data'}
-	]
-	db.members.findOne({_id:member._id}).populate(populate).exec((err,doc)=>{
+	let summary=req.query.summary || false
+	let populate=[]
+	let select='-mainPicture'
+	if(summary){
+		populate.push({path:'mainPicture', select:'_id large rotate marginTop marginLeft zoom'})
+		select='-images'
+	}else{
+		populate.push({path:'images', select:'_id data rotate marginTop marginLeft zoom'})
+	}
+
+	db.members.findOne({_id:member._id}).select(select).populate(populate).exec((err,doc)=>{
 		if(dberr(err, next)){
 			if(dbnull(doc, next)){
+				doc=doc.toJSON()
 				var myProfile={
 					_id:doc._id,
 					name:doc.name,
@@ -32,9 +40,18 @@ function getMyProfile(member,req,res,next,cb){
 					showName:doc.showName,
 					showPicture:doc.showPicture,
 					profileEnabled:doc.profileEnabled,
-					images:doc.images
-
+					mainPicture:{},
+					images:[]
 				}
+				myProfile.mainPicture=changeImageObject(doc.mainPicture)
+				if(doc.images){
+					doc.images.forEach((e)=>{
+						myProfile.images.push(changeImageObject(e))
+					})
+				}
+				
+				tempLog('doc2.json',JSON.stringify(doc,null,2))
+
 				cb(myProfile)
 			}
 		}
@@ -78,31 +95,35 @@ function put(member,req,res,next,cb){
 					return next({code:'REQUIRE_FIELD',message:'Cinsiyet hatali.'})
 
 				saveImages(member,data,(err,data)=>{
-					if(data.images){
-						doc.mainPicture=data.mainPicture
-						doc.images=data.images
-					}
-					console.log(`data.images:`,data.images)
-					
-					doc.save((err,newDoc)=>{
-						if(dberr(err, next)){
-							var myProfile={
-								_id:newDoc._id,
-								name:newDoc.name,
-								lastName:newDoc.lastName,
-								username:newDoc.username,
-								email:newDoc.email,
-								gender:newDoc.gender
-							}
-							cb(myProfile)
+					if(dberr(err, next)){
+						if(data.images){
+							doc.mainPicture=data.mainPicture
+							doc.images=data.images
 						}
-					})
+
+
+						doc.save((err,newDoc)=>{
+							if(dberr(err, next)){
+								var myProfile={
+									_id:newDoc._id,
+									name:newDoc.name,
+									lastName:newDoc.lastName,
+									username:newDoc.username,
+									email:newDoc.email,
+									gender:newDoc.gender
+								}
+								cb(myProfile)
+							}
+						})
+					}
 				})
 				
 			}
 		}
 	})  
 }
+
+
 
 function saveImages(member,data,cb){
 	if(!data.images){
@@ -123,7 +144,7 @@ function saveImages(member,data,cb){
 			return cb1()
 
 		if(resimler[index]._id){
-			db.images.findOne({_id:resimler[index]._id, memberId:member._id},(err,doc)=>{
+			db.images.findOne({_id:resimler[index]._id, uploadById:member._id},(err,doc)=>{
 				if(dberr(err,cb1)){
 					if(dbnull(doc,cb1)){
 						doc.caption=resimler[index].caption || doc.caption || ''
@@ -183,6 +204,7 @@ function saveImages(member,data,cb){
 
 	calistir((err)=>{
 		if(!err){
+			
 			delete data.images
 
 			data.images=imageList
@@ -192,6 +214,7 @@ function saveImages(member,data,cb){
 				data.mainPicture=null
 
 			}
+			console.log(`data.mainPicture:`,data.mainPicture)
 			cb(null,data)
 		}else{
 			cb(err)
