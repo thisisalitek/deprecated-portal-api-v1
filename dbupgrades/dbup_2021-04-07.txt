@@ -1,4 +1,0 @@
-db.getCollection('tasks').deleteMany({},{multi:true})
-
-db.getCollection('despatches').update({localStatus:'pending'},{$set:{localStatus:''}},{multi:true})
-

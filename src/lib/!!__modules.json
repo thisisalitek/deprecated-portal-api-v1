@@ -1,0 +1,32 @@
+{
+    "eInvoice": false,
+    "eLedger": false,
+    "erp": false,
+    "mrp": false,
+    "mrp2": false,
+    "inventory": false,
+    "finance": false,
+    "accounting": false,
+    "cargoIntegrations": {
+        "all":false,
+        "suratkargo":false,
+        "yurticikargo":false,
+        "mngkargo":false,
+        "pttkargo":false
+    },
+    "bankIntegrations": {
+        "all":false,
+        "garantibbva":false,
+        "yapikredi":false,
+        "finansbank":false
+    },
+    "webIntegrations": {
+        "all":false,
+        "opencart":false,
+        "n11":false,
+        "sahibinden":false,
+        "gittigidiyor":false,
+        "hepsiburada":false
+    },
+    "posDevice": false
+}
